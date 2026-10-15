@@ -1,0 +1,73 @@
+﻿2026-10-15T17:18:50.0721445Z ##[group]Run actions/checkout@v4
+2026-10-15T17:18:50.0722275Z with:
+2026-10-15T17:18:50.0722688Z   repository: shendoo2020/kd_courses
+2026-10-15T17:18:50.0725552Z   token: ***
+2026-10-15T17:18:50.0725932Z   ssh-strict: true
+2026-10-15T17:18:50.0726313Z   ssh-user: git
+2026-10-15T17:18:50.0726708Z   persist-credentials: true
+2026-10-15T17:18:50.0727111Z   clean: true
+2026-10-15T17:18:50.0727504Z   sparse-checkout-cone-mode: true
+2026-10-15T17:18:50.0727933Z   fetch-depth: 1
+2026-10-15T17:18:50.0728309Z   fetch-tags: false
+2026-10-15T17:18:50.0728708Z   show-progress: true
+2026-10-15T17:18:50.0729078Z   lfs: false
+2026-10-15T17:18:50.0729462Z   submodules: false
+2026-10-15T17:18:50.0730288Z   set-safe-directory: true
+2026-10-15T17:18:50.0730715Z   allow-unsafe-pr-checkout: false
+2026-10-15T17:18:50.0731465Z ##[endgroup]
+2026-10-15T17:18:50.1760647Z Syncing repository: shendoo2020/kd_courses
+2026-10-15T17:18:50.1762649Z ##[group]Getting Git version info
+2026-10-15T17:18:50.1763654Z Working directory is '/home/runner/work/kd_courses/kd_courses'
+2026-10-15T17:18:50.1764676Z [command]/usr/bin/git version
+2026-10-15T17:18:50.1765102Z git version 2.55.0
+2026-10-15T17:18:50.1778646Z ##[endgroup]
+2026-10-15T17:18:50.1796455Z Temporarily overriding HOME='/home/runner/work/_temp/557ccd5c-1d37-43d8-aa6f-ea1d6e4b202f' before making global git config changes
+2026-10-15T17:18:50.1797996Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-15T17:18:50.1801758Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/kd_courses/kd_courses
+2026-10-15T17:18:50.1852436Z Deleting the contents of '/home/runner/work/kd_courses/kd_courses'
+2026-10-15T17:18:50.1857652Z ##[group]Initializing the repository
+2026-10-15T17:18:50.1864585Z [command]/usr/bin/git init /home/runner/work/kd_courses/kd_courses
+2026-10-15T17:18:50.2015308Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-15T17:18:50.2016999Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-15T17:18:50.2018546Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-15T17:18:50.2019887Z hint: call:
+2026-10-15T17:18:50.2020573Z hint:
+2026-10-15T17:18:50.2021408Z hint: 	git config --global init.defaultBranch <name>
+2026-10-15T17:18:50.2022275Z hint:
+2026-10-15T17:18:50.2023073Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-15T17:18:50.2024297Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-15T17:18:50.2025258Z hint:
+2026-10-15T17:18:50.2025943Z hint: 	git branch -m <name>
+2026-10-15T17:18:50.2026763Z hint:
+2026-10-15T17:18:50.2027658Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-15T17:18:50.2029079Z Initialized empty Git repository in /home/runner/work/kd_courses/kd_courses/.git/
+2026-10-15T17:18:50.2032120Z [command]/usr/bin/git remote add origin https://github.com/shendoo2020/kd_courses
+2026-10-15T17:18:50.2087174Z ##[endgroup]
+2026-10-15T17:18:50.2088318Z ##[group]Disabling automatic garbage collection
+2026-10-15T17:18:50.2092716Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-15T17:18:50.2127022Z ##[endgroup]
+2026-10-15T17:18:50.2128250Z ##[group]Setting up auth
+2026-10-15T17:18:50.2135344Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-15T17:18:50.2170683Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-15T17:18:50.2577911Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-15T17:18:50.2618460Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-15T17:18:50.2850898Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-15T17:18:50.2887179Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-15T17:18:50.3114214Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-15T17:18:50.3158552Z ##[endgroup]
+2026-10-15T17:18:50.3159328Z ##[group]Fetching the repository
+2026-10-15T17:18:50.3168954Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +0601b056faf88726b3fe2a516ef4ae1a78ab6f1c:refs/remotes/origin/main
+2026-10-15T17:18:50.7417130Z From https://github.com/shendoo2020/kd_courses
+2026-10-15T17:18:50.7418876Z  * [new ref]         0601b056faf88726b3fe2a516ef4ae1a78ab6f1c -> origin/main
+2026-10-15T17:18:50.7433674Z ##[endgroup]
+2026-10-15T17:18:50.7434660Z ##[group]Determining the checkout info
+2026-10-15T17:18:50.7435877Z ##[endgroup]
+2026-10-15T17:18:50.7438357Z [command]/usr/bin/git sparse-checkout disable
+2026-10-15T17:18:50.7496129Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-15T17:18:50.7532290Z ##[group]Checking out the ref
+2026-10-15T17:18:50.7536600Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-10-15T17:18:50.7666859Z Switched to a new branch 'main'
+2026-10-15T17:18:50.7674799Z branch 'main' set up to track 'origin/main'.
+2026-10-15T17:18:50.7683678Z ##[endgroup]
+2026-10-15T17:18:50.7729537Z [command]/usr/bin/git log -1 --format=%H
+2026-10-15T17:18:50.7759355Z 0601b056faf88726b3fe2a516ef4ae1a78ab6f1c

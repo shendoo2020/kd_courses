@@ -28,11 +28,20 @@ jobs:
             echo "🚀 Starting Deployment Process..."
 
             # 1. Navigate to the exact project directory on the server
+            mkdir -p ~/app/kdcourses/KDCourses
             cd ~/app/kdcourses/KDCourses
 
-            # 2. Pull the latest code from GitHub
-            echo "📥 Pulling latest code from main branch..."
-            git pull origin main
+            # 2. Pull the latest code from GitHub securely
+            echo "📥 Syncing latest code from main branch..."
+            if [ ! -d ".git" ]; then
+              echo "Initializing Git repository..."
+              git init
+              git remote add origin https://github.com/shendoo2020/kd_courses.git
+            fi
+            
+            # Fetch and hard reset to ensure exact match with remote
+            git fetch --all
+            git reset --hard origin/main
 
             # 3. Deploy Backend
             echo "⚙️ Deploying Backend..."

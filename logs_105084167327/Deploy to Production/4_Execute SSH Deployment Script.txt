@@ -1,0 +1,86 @@
+﻿2026-10-15T17:18:50.8037417Z ##[group]Run appleboy/ssh-action@v1.0.3
+2026-10-15T17:18:50.8037886Z with:
+2026-10-15T17:18:50.8038273Z   host: ***
+2026-10-15T17:18:50.8038595Z   username: ***
+2026-10-15T17:18:50.8046117Z   key: ***
+2026-10-15T17:18:50.8048711Z   script: # Stop execution if any command fails
+set -e
+
+echo "🚀 Starting Deployment Process..."
+
+# 1. Navigate to the exact project directory on the server
+cd ~/app/kdcourses/KDCourses
+
+# 2. Pull the latest code from GitHub
+echo "📥 Pulling latest code from main branch..."
+git pull origin main
+
+# 3. Deploy Backend
+echo "⚙️ Deploying Backend..."
+cd backend
+npm install
+npx prisma generate
+npx prisma db push
+npm run build
+pm2 restart kdcourses-api --update-env
+
+# 4. Deploy Frontend
+echo "🎨 Deploying Frontend..."
+cd ../frontend
+npm install
+npm run build
+pm2 restart kdcourses-web --update-env
+
+# 5. Save PM2 state
+echo "💾 Saving PM2 process state..."
+pm2 save
+
+echo "✅ Deployment Successful! Platform is LIVE."
+
+2026-10-15T17:18:50.8051510Z   port: 22
+2026-10-15T17:18:50.8051861Z   timeout: 30s
+2026-10-15T17:18:50.8052217Z   command_timeout: 10m
+2026-10-15T17:18:50.8052552Z   proxy_port: 22
+2026-10-15T17:18:50.8052873Z   proxy_timeout: 30s
+2026-10-15T17:18:50.8053198Z ##[endgroup]
+2026-10-15T17:18:50.8169129Z ##[command]/usr/bin/docker run --name d03a5350c9c0445d9babae63fe9ced39d_dcf4b5 --label 15759d --workdir /github/workspace --rm -e "INPUT_HOST" -e "INPUT_USERNAME" -e "INPUT_KEY" -e "INPUT_SCRIPT" -e "INPUT_PORT" -e "INPUT_PASSPHRASE" -e "INPUT_PASSWORD" -e "INPUT_SYNC" -e "INPUT_USE_INSECURE_CIPHER" -e "INPUT_CIPHER" -e "INPUT_TIMEOUT" -e "INPUT_COMMAND_TIMEOUT" -e "INPUT_KEY_PATH" -e "INPUT_FINGERPRINT" -e "INPUT_PROXY_HOST" -e "INPUT_PROXY_PORT" -e "INPUT_PROXY_USERNAME" -e "INPUT_PROXY_PASSWORD" -e "INPUT_PROXY_PASSPHRASE" -e "INPUT_PROXY_TIMEOUT" -e "INPUT_PROXY_KEY" -e "INPUT_PROXY_KEY_PATH" -e "INPUT_PROXY_FINGERPRINT" -e "INPUT_PROXY_CIPHER" -e "INPUT_PROXY_USE_INSECURE_CIPHER" -e "INPUT_SCRIPT_STOP" -e "INPUT_ENVS" -e "INPUT_ENVS_FORMAT" -e "INPUT_DEBUG" -e "INPUT_ALLENVS" -e "INPUT_REQUEST_PTY" -e "HOME" -e "GITHUB_JOB" -e "GITHUB_REF" -e "GITHUB_SHA" -e "GITHUB_REPOSITORY" -e "GITHUB_REPOSITORY_OWNER" -e "GITHUB_REPOSITORY_OWNER_ID" -e "GITHUB_RUN_ID" -e "GITHUB_RUN_NUMBER" -e "GITHUB_RETENTION_DAYS" -e "GITHUB_RUN_ATTEMPT" -e "GITHUB_ACTOR_ID" -e "GITHUB_ACTOR" -e "GITHUB_WORKFLOW" -e "GITHUB_HEAD_REF" -e "GITHUB_BASE_REF" -e "GITHUB_EVENT_NAME" -e "GITHUB_SERVER_URL" -e "GITHUB_API_URL" -e "GITHUB_GRAPHQL_URL" -e "GITHUB_REF_NAME" -e "GITHUB_REF_PROTECTED" -e "GITHUB_REF_TYPE" -e "GITHUB_WORKFLOW_REF" -e "GITHUB_WORKFLOW_SHA" -e "GITHUB_REPOSITORY_ID" -e "GITHUB_TRIGGERING_ACTOR" -e "GITHUB_WORKSPACE" -e "GITHUB_ACTION" -e "GITHUB_EVENT_PATH" -e "GITHUB_ACTION_REPOSITORY" -e "GITHUB_ACTION_REF" -e "GITHUB_PATH" -e "GITHUB_ENV" -e "GITHUB_STEP_SUMMARY" -e "GITHUB_STATE" -e "GITHUB_OUTPUT" -e "GITHUB_ARTIFACTS" -e "GITHUB_ARTIFACTS_LIST" -e "RUNNER_OS" -e "RUNNER_ARCH" -e "RUNNER_NAME" -e "RUNNER_ENVIRONMENT" -e "RUNNER_TOOL_CACHE" -e "RUNNER_TEMP" -e "RUNNER_WORKSPACE" -e "ACTIONS_RUNTIME_URL" -e "ACTIONS_RUNTIME_TOKEN" -e "ACTIONS_CACHE_URL" -e "ACTIONS_RESULTS_URL" -e "ACTIONS_CACHE_MODE" -e "ACTIONS_ORCHESTRATION_ID" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp":"/github/runner_temp" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v "/home/runner/work/kd_courses/kd_courses":"/github/workspace" 15759d:03a5350c9c0445d9babae63fe9ced39d
+2026-10-15T17:18:51.0391951Z ======CMD======
+2026-10-15T17:18:51.0393234Z # Stop execution if any command fails
+2026-10-15T17:18:51.0394117Z set -e
+2026-10-15T17:18:51.0394730Z 
+2026-10-15T17:18:51.0395331Z echo "🚀 Starting Deployment Process..."
+2026-10-15T17:18:51.0396091Z 
+2026-10-15T17:18:51.0396479Z # 1. Navigate to the exact project directory on the server
+2026-10-15T17:18:51.0398418Z cd ~/app/kdcourses/KDCourses
+2026-10-15T17:18:51.0399323Z 
+2026-10-15T17:18:51.0399603Z # 2. Pull the latest code from GitHub
+2026-10-15T17:18:51.0400858Z echo "📥 Pulling latest code from main branch..."
+2026-10-15T17:18:51.0401586Z git pull origin main
+2026-10-15T17:18:51.0401796Z 
+2026-10-15T17:18:51.0401932Z # 3. Deploy Backend
+2026-10-15T17:18:51.0402366Z echo "⚙️ Deploying Backend..."
+2026-10-15T17:18:51.0403016Z cd backend
+2026-10-15T17:18:51.0403308Z npm install
+2026-10-15T17:18:51.0403608Z npx prisma generate
+2026-10-15T17:18:51.0404103Z npx prisma db push
+2026-10-15T17:18:51.0404471Z npm run build
+2026-10-15T17:18:51.0405101Z pm2 restart kdcourses-api --update-env
+2026-10-15T17:18:51.0405376Z 
+2026-10-15T17:18:51.0405511Z # 4. Deploy Frontend
+2026-10-15T17:18:51.0406229Z echo "🎨 Deploying Frontend..."
+2026-10-15T17:18:51.0406577Z cd ../frontend
+2026-10-15T17:18:51.0406862Z npm install
+2026-10-15T17:18:51.0407147Z npm run build
+2026-10-15T17:18:51.0407462Z pm2 restart kdcourses-web --update-env
+2026-10-15T17:18:51.0407735Z 
+2026-10-15T17:18:51.0407919Z # 5. Save PM2 state
+2026-10-15T17:18:51.0408299Z echo "💾 Saving PM2 process state..."
+2026-10-15T17:18:51.0408658Z pm2 save
+2026-10-15T17:18:51.0408816Z 
+2026-10-15T17:18:51.0409057Z echo "✅ Deployment Successful! Platform is LIVE."
+2026-10-15T17:18:51.0409335Z 
+2026-10-15T17:18:51.0409463Z ======END======
+2026-10-15T17:18:52.9988676Z out: 🚀 Starting Deployment Process...
+2026-10-15T17:18:52.9996913Z out: 📥 Pulling latest code from main branch...
+2026-10-15T17:18:52.9997934Z err: fatal: not a git repository (or any of the parent directories): .git
+2026-10-15T17:18:53.0006455Z 2026/10/15 17:18:53 Process exited with status 128
