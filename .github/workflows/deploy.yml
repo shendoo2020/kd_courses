@@ -1,0 +1,57 @@
+name: Deploy KDCourses to Ubuntu Server
+
+# Trigger this workflow every time code is pushed to the 'main' branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Execute SSH Deployment Script
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Stop execution if any command fails
+            set -e
+
+            echo "🚀 Starting Deployment Process..."
+
+            # 1. Navigate to the exact project directory on the server
+            cd ~/app/kdcourses/KDCourses
+
+            # 2. Pull the latest code from GitHub
+            echo "📥 Pulling latest code from main branch..."
+            git pull origin main
+
+            # 3. Deploy Backend
+            echo "⚙️ Deploying Backend..."
+            cd backend
+            npm install
+            npx prisma generate
+            npx prisma db push
+            npm run build
+            pm2 restart kdcourses-api --update-env
+
+            # 4. Deploy Frontend
+            echo "🎨 Deploying Frontend..."
+            cd ../frontend
+            npm install
+            npm run build
+            pm2 restart kdcourses-web --update-env
+
+            # 5. Save PM2 state
+            echo "💾 Saving PM2 process state..."
+            pm2 save
+
+            echo "✅ Deployment Successful! Platform is LIVE."
