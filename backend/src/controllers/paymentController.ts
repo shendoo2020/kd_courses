@@ -4,7 +4,7 @@ import prisma from '../config/db';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', {
-  apiVersion: '2023-10-16',
+  // Omit apiVersion to let the installed SDK version use its default typing
 });
 
 // Create Stripe Checkout Session
@@ -32,7 +32,7 @@ export const createCheckoutSession = async (req: AuthRequest, res: Response): Pr
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ['card'] as any, // Cast to any to bypass strict version mismatches
       line_items: [
         {
           price_data: {

@@ -1,12 +1,12 @@
-import { Router } from 'express';
-import { protect } from '../middlewares/authMiddleware';
+import { Router, Response } from 'express';
+import { protect, AuthRequest } from '../middlewares/authMiddleware';
 import prisma from '../config/db';
 
 const router = Router();
 
 router.use(protect);
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user?.id },
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.put('/', async (req, res) => {
+router.put('/', async (req: AuthRequest, res: Response) => {
   try {
     const { name, bio, avatarUrl } = req.body;
     const updatedUser = await prisma.user.update({
