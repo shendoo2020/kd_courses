@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import Link from "next/link";
-import { BookOpen, PlayCircle, Trophy } from "lucide-react";
+import { BookOpen, PlayCircle, Trophy, User } from "lucide-react";
 
 interface Enrollment {
   id: string;
@@ -29,7 +29,7 @@ export default function DashboardPage() {
         setEnrollments(response.data);
       } catch (err: any) {
         if (err.response?.status === 401) {
-          setError("Please log in to view your dashboard. (Requires valid JWT in localStorage)");
+          setError("Please log in to view your dashboard.");
         } else {
           setError("Failed to load dashboard data.");
         }
@@ -41,12 +41,17 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="bg-surface-muted min-h-screen py-10">
+    <div className="bg-surface-muted min-h-[calc(100vh-4rem)] py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <header className="mb-10">
-          <h1 className="text-3xl font-bold text-slate-900">My Learning</h1>
-          <p className="text-slate-600 mt-2">Track your progress and resume your courses.</p>
+        <header className="flex justify-between items-end mb-10">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">My Learning</h1>
+            <p className="text-slate-600 mt-2">Track your progress and resume your courses.</p>
+          </div>
+          <Link href="/dashboard/profile" className="btn-secondary flex items-center gap-2">
+            <User size={18} /> My Profile
+          </Link>
         </header>
 
         {isLoading ? (
@@ -59,7 +64,7 @@ export default function DashboardPage() {
           <div className="bg-white border border-red-200 text-red-700 px-8 py-12 rounded-xl shadow-sm text-center">
             <Trophy className="mx-auto text-red-300 mb-4 h-12 w-12" />
             <p className="text-lg font-medium mb-2">{error}</p>
-            <p className="text-sm text-red-500">To simulate login, use your browser console: <code className="bg-red-100 px-1 rounded">localStorage.setItem('token', 'YOUR_JWT')</code></p>
+            <Link href="/login" className="btn-primary mt-4">Go to Login</Link>
           </div>
         ) : enrollments.length === 0 ? (
           <div className="bg-white px-8 py-16 rounded-xl shadow-sm text-center border border-slate-200">
@@ -93,14 +98,16 @@ export default function DashboardPage() {
                     Instructor: <span className="font-medium text-slate-700">{enrollment.course.instructor.name}</span>
                   </p>
                   
-                  {/* Progress Bar Mockup */}
+                  {/* Progress Bar Mockup (To be made dynamic later) */}
                   <div className="w-full bg-slate-100 rounded-full h-2 mb-4">
                     <div className="bg-brand-500 h-2 rounded-full w-1/4"></div>
                   </div>
 
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-sm font-medium text-brand-600">25% Complete</span>
-                    <button className="btn-primary py-2 px-4 text-sm">Resume Learning</button>
+                    <Link href={`/courses/${enrollment.course.id}/learn`} className="btn-primary py-2 px-4 text-sm">
+                      Resume Learning
+                    </Link>
                   </div>
                 </div>
               </div>

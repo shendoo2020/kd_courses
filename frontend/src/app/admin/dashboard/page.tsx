@@ -95,9 +95,12 @@ export default function AdminDashboard() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                     {course.price === 0 ? 'Free' : `$${course.price.toFixed(2)}`}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link href={`/courses/${course.id}`} className="text-brand-600 hover:text-brand-900">
-                      View Public Page
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-4">
+                    <Link href={`/admin/courses/${course.id}/edit`} className="text-brand-600 hover:text-brand-900">
+                      Edit Syllabus
+                    </Link>
+                    <Link href={`/courses/${course.id}`} className="text-slate-500 hover:text-slate-800">
+                      View Public
                     </Link>
                   </td>
                 </tr>
