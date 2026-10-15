@@ -1,0 +1,14 @@
+# Workspace Root Ignore
+.vscode/
+.idea/
+.DS_Store
+
+# Do NOT ignore the backend or frontend directories themselves
+!backend/
+!frontend/
+
+# Ignore massive tarballs that might have been accidentally created locally
+*.tar
+*.gz
+*.zip
+*.7z

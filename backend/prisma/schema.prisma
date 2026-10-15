@@ -1,0 +1,150 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+model User {
+  id           String       @id @default(uuid())
+  name         String
+  email        String       @unique
+  passwordHash String
+  role         Role         @default(STUDENT)
+  avatarUrl    String?
+  bio          String?      @db.Text
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  coursesTaught Course[]    @relation("InstructorCourses")
+  enrollments   Enrollment[]
+  lessonProgress LessonProgress[]
+  quizAttempts   QuizAttempt[]
+  certificates   Certificate[]
+}
+
+model Course {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  syllabus    String       @db.Text
+  price       Float        @default(0.0)
+  
+  instructorId String
+  instructor   User        @relation("InstructorCourses", fields: [instructorId], references: [id])
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  enrollments Enrollment[]
+  modules     Module[]
+  certificates Certificate[]
+}
+
+model Enrollment {
+  id        String           @id @default(uuid())
+  studentId String
+  student   User             @relation(fields: [studentId], references: [id])
+  courseId  String
+  course    Course           @relation(fields: [courseId], references: [id])
+  status    EnrollmentStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+  
+  @@unique([studentId, courseId])
+}
+
+model Module {
+  id       String   @id @default(uuid())
+  title    String
+  order    Int      @default(0)
+  courseId String
+  course   Course   @relation(fields: [courseId], references: [id])
+  
+  lessons  Lesson[]
+  quizzes  Quiz[]
+}
+
+model Lesson {
+  id       String   @id @default(uuid())
+  title    String
+  content  String   @db.Text // Can be video URL or markdown text
+  order    Int      @default(0)
+  moduleId String
+  module   Module   @relation(fields: [moduleId], references: [id])
+  
+  progress LessonProgress[]
+}
+
+model LessonProgress {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id])
+  completed Boolean  @default(false)
+  
+  @@unique([userId, lessonId])
+}
+
+model Quiz {
+  id        String     @id @default(uuid())
+  title     String
+  moduleId  String
+  module    Module     @relation(fields: [moduleId], references: [id])
+  
+  questions Question[]
+  attempts  QuizAttempt[]
+}
+
+model Question {
+  id      String   @id @default(uuid())
+  text    String
+  quizId  String
+  quiz    Quiz     @relation(fields: [quizId], references: [id])
+  
+  options Option[]
+}
+
+model Option {
+  id         String   @id @default(uuid())
+  text       String
+  isCorrect  Boolean  @default(false)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+}
+
+model QuizAttempt {
+  id      String  @id @default(uuid())
+  userId  String
+  user    User    @relation(fields: [userId], references: [id])
+  quizId  String
+  quiz    Quiz    @relation(fields: [quizId], references: [id])
+  score   Float
+  passed  Boolean @default(false)
+}
+
+model Certificate {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  issueDate DateTime @default(now())
+  pdfUrl    String?
+  
+  @@unique([userId, courseId])
+}
