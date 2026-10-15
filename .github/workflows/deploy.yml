@@ -27,6 +27,10 @@ jobs:
 
             echo "🚀 Starting Deployment Process..."
 
+            # 0. Load NVM explicitly for non-interactive SSH session
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
             # 1. Navigate to the exact project directory on the server
             mkdir -p ~/app/kdcourses/KDCourses
             cd ~/app/kdcourses/KDCourses
