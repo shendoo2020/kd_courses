@@ -32,7 +32,7 @@ export const createCheckoutSession = async (req: AuthRequest, res: Response): Pr
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'] as any, // Cast to any to bypass strict version mismatches
+      // payment_method_types is intentionally omitted; Stripe dashboard dictates defaults.
       line_items: [
         {
           price_data: {
