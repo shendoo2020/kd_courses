@@ -54,6 +54,117 @@ export const createLesson = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
+// Instructor: Update a lesson or quiz
+export const updateLesson = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { lessonId } = req.params;
+    const { title, content } = req.body;
+    const instructorId = req.user?.id;
+    const userRole = req.user?.role;
+
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: { module: { include: { course: true } } }
+    });
+
+    if (!lesson) {
+      res.status(404).json({ message: 'Lesson not found' });
+      return;
+    }
+
+    if (userRole !== 'ADMIN' && lesson.module.course.instructorId !== instructorId) {
+      res.status(403).json({ message: 'Not authorized to edit this lesson' });
+      return;
+    }
+
+    const updated = await prisma.lesson.update({
+      where: { id: lessonId },
+      data: {
+        ...(title && { title }),
+        ...(content !== undefined && { content }),
+      }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Update Lesson Error:', error);
+    res.status(500).json({ message: 'Failed to update lesson' });
+  }
+};
+
+// Instructor: Delete a lesson or quiz
+export const deleteLesson = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { lessonId } = req.params;
+    const instructorId = req.user?.id;
+    const userRole = req.user?.role;
+
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: { module: { include: { course: true } } }
+    });
+
+    if (!lesson) {
+      res.status(404).json({ message: 'Lesson not found' });
+      return;
+    }
+
+    if (userRole !== 'ADMIN' && lesson.module.course.instructorId !== instructorId) {
+      res.status(403).json({ message: 'Not authorized to delete this lesson' });
+      return;
+    }
+
+    // Delete progress and comments linked to lesson
+    await prisma.lessonProgress.deleteMany({ where: { lessonId } });
+    await prisma.comment.deleteMany({ where: { lessonId } });
+
+    await prisma.lesson.delete({ where: { id: lessonId } });
+
+    res.json({ message: 'Lesson successfully deleted' });
+  } catch (error) {
+    console.error('Delete Lesson Error:', error);
+    res.status(500).json({ message: 'Failed to delete lesson' });
+  }
+};
+
+// Instructor: Delete a module
+export const deleteModule = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { moduleId } = req.params;
+    const instructorId = req.user?.id;
+    const userRole = req.user?.role;
+
+    const module = await prisma.module.findUnique({
+      where: { id: moduleId },
+      include: { course: true, lessons: true }
+    });
+
+    if (!module) {
+      res.status(404).json({ message: 'Module not found' });
+      return;
+    }
+
+    if (userRole !== 'ADMIN' && module.course.instructorId !== instructorId) {
+      res.status(403).json({ message: 'Not authorized to delete this module' });
+      return;
+    }
+
+    // Delete all lessons and progress in this module
+    for (const les of module.lessons) {
+      await prisma.lessonProgress.deleteMany({ where: { lessonId: les.id } });
+      await prisma.comment.deleteMany({ where: { lessonId: les.id } });
+    }
+    await prisma.lesson.deleteMany({ where: { moduleId } });
+    await prisma.quiz.deleteMany({ where: { moduleId } });
+    await prisma.module.delete({ where: { id: moduleId } });
+
+    res.json({ message: 'Module and all its content successfully deleted' });
+  } catch (error) {
+    console.error('Delete Module Error:', error);
+    res.status(500).json({ message: 'Failed to delete module' });
+  }
+};
+
 // Student: Get all classroom content for an enrolled course
 export const getClassroom = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

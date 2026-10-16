@@ -21,7 +21,9 @@ import {
   BrainCircuit,
   Terminal,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  Headphones
 } from "lucide-react";
 
 interface InteractiveLessonPlayerProps {
@@ -339,13 +341,30 @@ export default function InteractiveLessonPlayer({
 
   // Web Speech API Voice Storyteller State (Option A)
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [autoPlayVoice, setAutoPlayVoice] = useState(true); // User requirement: start automatically with each slide
   const [audioSpeed, setAudioSpeed] = useState<number>(1.0);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
 
+  // Instructor detection state (visible to instructor only)
+  const [isInstructor, setIsInstructor] = useState(false);
+
   // Copy code helper state
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
+
+  // Check if current user is an instructor or admin
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        if (payload.role === "INSTRUCTOR" || payload.role === "ADMIN") {
+          setIsInstructor(true);
+        }
+      } catch (e) {}
+    }
+  }, []);
 
   // Initialize Speech Synthesis
   useEffect(() => {
@@ -355,7 +374,6 @@ export default function InteractiveLessonPlayer({
       const loadVoices = () => {
         const voices = window.speechSynthesis.getVoices();
         setAvailableVoices(voices);
-        // Find natural English voice if possible
         const preferredVoice =
           voices.find((v) => v.lang.startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Daniel"))) ||
           voices.find((v) => v.lang.startsWith("en")) ||
@@ -376,15 +394,17 @@ export default function InteractiveLessonPlayer({
     };
   }, []);
 
-  // Stop speech when slide changes
-  useEffect(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      setIsPlayingAudio(false);
-    }
-  }, [currentSlideIndex, lessonTitle]);
+  // Extract friendly narration script from slide (enclosed in <!-- NARRATION: ... -->)
+  const currentSlideRaw = slides[currentSlideIndex] || "";
+  const narrationMatch = currentSlideRaw.match(/<!--\s*NARRATION:\s*([\s\S]*?)-->/i);
+  const narrationScript = narrationMatch ? narrationMatch[1].trim() : null;
 
-  // Clean narration text (stripping markdown syntax for pleasant audio listening)
+  // Visible slide content with narration comment stripped
+  const visibleSlideContent = useMemo(() => {
+    return currentSlideRaw.replace(/<!--\s*NARRATION:\s*[\s\S]*?-->/gi, "").trim();
+  }, [currentSlideRaw]);
+
+  // Fallback clean narration text if no explicit narration script is provided
   const getCleanNarrationText = (rawMarkdown: string) => {
     return rawMarkdown
       .replace(/###?\s+/g, "")
@@ -396,6 +416,41 @@ export default function InteractiveLessonPlayer({
       .replace(/•/g, "")
       .trim();
   };
+
+  const playSpeech = (textToSpeak: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    if (selectedVoice) utterance.voice = selectedVoice;
+    utterance.rate = audioSpeed;
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => setIsPlayingAudio(false);
+    utterance.onerror = () => setIsPlayingAudio(false);
+
+    window.speechSynthesis.speak(utterance);
+    setIsPlayingAudio(true);
+  };
+
+  // Auto-start narration automatically on slide change (Requirement 1)
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setIsPlayingAudio(false);
+
+      if (autoPlayVoice && slides.length > 0) {
+        const textToNarrate = narrationScript || getCleanNarrationText(visibleSlideContent);
+        if (textToNarrate) {
+          // Slight delay to allow DOM transition
+          const timer = setTimeout(() => {
+            playSpeech(textToNarrate);
+          }, 350);
+          return () => clearTimeout(timer);
+        }
+      }
+    }
+  }, [currentSlideIndex, lessonTitle, autoPlayVoice]);
 
   const toggleVoiceNarration = () => {
     if (!isSpeechSupported) {
@@ -411,34 +466,18 @@ export default function InteractiveLessonPlayer({
         window.speechSynthesis.resume();
         setIsPlayingAudio(true);
       } else {
-        window.speechSynthesis.cancel();
-        const currentSlideContent = slides[currentSlideIndex] || "";
-        const cleanText = getCleanNarrationText(currentSlideContent);
-
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        if (selectedVoice) utterance.voice = selectedVoice;
-        utterance.rate = audioSpeed;
-        utterance.pitch = 1.0;
-
-        utterance.onend = () => {
-          setIsPlayingAudio(false);
-        };
-
-        utterance.onerror = () => {
-          setIsPlayingAudio(false);
-        };
-
-        window.speechSynthesis.speak(utterance);
-        setIsPlayingAudio(true);
+        const textToNarrate = narrationScript || getCleanNarrationText(visibleSlideContent);
+        if (textToNarrate) {
+          playSpeech(textToNarrate);
+        }
       }
     }
   };
 
   const restartNarration = () => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      setIsPlayingAudio(false);
-      setTimeout(() => toggleVoiceNarration(), 100);
+    const textToNarrate = narrationScript || getCleanNarrationText(visibleSlideContent);
+    if (textToNarrate) {
+      playSpeech(textToNarrate);
     }
   };
 
@@ -448,18 +487,11 @@ export default function InteractiveLessonPlayer({
     const nextSpeed = speeds[nextIndex];
     setAudioSpeed(nextSpeed);
 
-    // If currently playing, restart with new speed
     if (isPlayingAudio) {
-      window.speechSynthesis.cancel();
-      setTimeout(() => {
-        const currentSlideContent = slides[currentSlideIndex] || "";
-        const cleanText = getCleanNarrationText(currentSlideContent);
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        if (selectedVoice) utterance.voice = selectedVoice;
-        utterance.rate = nextSpeed;
-        utterance.onend = () => setIsPlayingAudio(false);
-        window.speechSynthesis.speak(utterance);
-      }, 50);
+      const textToNarrate = narrationScript || getCleanNarrationText(visibleSlideContent);
+      if (textToNarrate) {
+        playSpeech(textToNarrate);
+      }
     }
   };
 
@@ -481,13 +513,11 @@ export default function InteractiveLessonPlayer({
     setTimeout(() => setCopiedCodeIndex(null), 2000);
   };
 
-  const currentSlideContent = slides[currentSlideIndex] || "";
-
-  // Inspect current slide to see if we should inject rich visual diagrams
-  const hasTokenizationRef = currentSlideContent.toLowerCase().includes("token");
-  const hasCicoRef = currentSlideContent.includes("C.I.C.O.") || currentSlideContent.includes("Anatomy");
-  const hasCotRef = currentSlideContent.toLowerCase().includes("chain-of-thought") || currentSlideContent.toLowerCase().includes("step-by-step");
-  const hasCompareRef = currentSlideContent.toLowerCase().includes("zero-shot vs") || currentSlideContent.toLowerCase().includes("few-shot");
+  // Inspect current slide to inject rich visual diagrams
+  const hasTokenizationRef = visibleSlideContent.toLowerCase().includes("token");
+  const hasCicoRef = visibleSlideContent.includes("C.I.C.O.") || visibleSlideContent.includes("Anatomy");
+  const hasCotRef = visibleSlideContent.toLowerCase().includes("chain-of-thought") || visibleSlideContent.toLowerCase().includes("step-by-step");
+  const hasCompareRef = visibleSlideContent.toLowerCase().includes("zero-shot vs") || visibleSlideContent.toLowerCase().includes("few-shot");
 
   return (
     <div className="flex flex-col bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-card">
@@ -524,20 +554,20 @@ export default function InteractiveLessonPlayer({
 
         {/* AI Voice Storyteller Bar (Option A) */}
         {isSpeechSupported && (
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-2xl shadow-xs">
+          <div className="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-2xl shadow-xs">
             <button
               onClick={toggleVoiceNarration}
               className={`p-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all ${
                 isPlayingAudio
-                  ? "bg-amber-500 text-slate-950 shadow-xs"
+                  ? "bg-amber-500 text-slate-950 shadow-xs animate-pulse"
                   : "bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 hover:bg-brand-100"
               }`}
-              title={isPlayingAudio ? "Pause Audio Narration" : "Play AI Mentor Voice Storytelling"}
+              title={isPlayingAudio ? "Pause Audio Narration" : "Play Story Narration"}
             >
               {isPlayingAudio ? (
                 <>
-                  <Pause size={14} className="animate-pulse" />
-                  <span>Pause Voice</span>
+                  <Pause size={14} />
+                  <span>Pause Story</span>
                 </>
               ) : (
                 <>
@@ -564,6 +594,19 @@ export default function InteractiveLessonPlayer({
             >
               {audioSpeed}x
             </button>
+
+            {/* Auto-Play Toggle */}
+            <button
+              onClick={() => setAutoPlayVoice(!autoPlayVoice)}
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-colors ${
+                autoPlayVoice
+                  ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700"
+              }`}
+              title="Toggle automatic voice narration on slide advance"
+            >
+              Auto: {autoPlayVoice ? "ON" : "OFF"}
+            </button>
           </div>
         )}
       </div>
@@ -571,139 +614,155 @@ export default function InteractiveLessonPlayer({
       {/* Main Slide Interactive Card Canvas */}
       <div className="p-6 sm:p-10 min-h-[420px] flex flex-col justify-between">
         
-        <div className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 leading-relaxed">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              h1: ({ children }) => (
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
-                  {children}
-                </h1>
-              ),
-              h2: ({ children }) => (
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-6 mb-3 flex items-center gap-2">
-                  <span className="w-1.5 h-6 bg-brand-600 rounded-full inline-block" />
-                  {children}
-                </h2>
-              ),
-              h3: ({ children }) => (
-                <h3 className="text-lg font-bold text-brand-600 dark:text-brand-400 mt-5 mb-2">
-                  {children}
-                </h3>
-              ),
-              p: ({ children }) => (
-                <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-                  {children}
-                </p>
-              ),
-              ul: ({ children }) => (
-                <ul className="space-y-2 mb-4 pl-4 list-disc text-sm sm:text-base text-slate-700 dark:text-slate-300">
-                  {children}
-                </ul>
-              ),
-              ol: ({ children }) => (
-                <ol className="space-y-2 mb-4 pl-4 list-decimal text-sm sm:text-base text-slate-700 dark:text-slate-300 font-medium">
-                  {children}
-                </ol>
-              ),
-              li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-              blockquote: ({ children }) => (
-                <blockquote className="my-4 p-4 rounded-xl border-l-4 border-brand-500 bg-brand-50/50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 text-sm not-italic shadow-xs">
-                  {children}
-                </blockquote>
-              ),
-              code: ({ inline, className, children, ...props }: any) => {
-                const codeString = String(children).replace(/\n$/, "");
-                const isBlock = !inline && codeString.includes("\n");
+        <div>
+          {/* Instructor-Only Speaker Notes (Requirement 1: Visible to Instructor Only) */}
+          {isInstructor && narrationScript && (
+            <div className="mb-6 p-4 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 rounded-2xl shadow-xs">
+              <div className="flex items-center gap-2 mb-1.5 text-amber-800 dark:text-amber-200 font-bold text-xs">
+                <Headphones size={15} className="text-amber-600" />
+                <span className="uppercase tracking-wider">👨‍🏫 Instructor Narration Script (Hidden from Students):</span>
+              </div>
+              <p className="text-xs text-amber-900 dark:text-amber-300 leading-relaxed font-sans italic bg-white/70 dark:bg-slate-900/60 p-3 rounded-xl border border-amber-200/60 dark:border-amber-900/40">
+                &ldquo;{narrationScript}&rdquo;
+              </p>
+            </div>
+          )}
 
-                if (isBlock) {
-                  const codeIdx = Math.abs(codeString.length * 31);
-                  return (
-                    <div className="my-4 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-md">
-                      <div className="flex justify-between items-center px-4 py-2 bg-slate-900 border-b border-slate-800 text-[11px] font-mono text-slate-400">
-                        <span className="flex items-center gap-1.5">
-                          <Terminal size={13} className="text-brand-400" />
-                          <span>Code Snippet</span>
-                        </span>
-                        <button
-                          onClick={() => copyCodeToClipboard(codeString, codeIdx)}
-                          className="flex items-center gap-1 hover:text-white transition-colors p-1"
-                          title="Copy to clipboard"
-                        >
-                          {copiedCodeIndex === codeIdx ? (
-                            <>
-                              <Check size={12} className="text-emerald-400" />
-                              <span className="text-emerald-400 font-bold">Copied!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy size={12} />
-                              <span>Copy</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <pre className="p-4 overflow-x-auto text-xs font-mono leading-relaxed bg-slate-950 text-slate-200">
-                        <code>{children}</code>
-                      </pre>
-                    </div>
-                  );
-                }
-
-                return (
-                  <code className="px-1.5 py-0.5 rounded-md font-mono text-xs bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-300 font-bold">
+          {/* Render Concise Slide Content (Requirement 2: Small text that gets to the point) */}
+          <div className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 leading-relaxed">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => (
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
                     {children}
-                  </code>
-                );
-              },
-            }}
-          >
-            {currentSlideContent}
-          </ReactMarkdown>
+                  </h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-5 mb-3 flex items-center gap-2">
+                    <span className="w-1.5 h-6 bg-brand-600 rounded-full inline-block" />
+                    {children}
+                  </h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="text-base sm:text-lg font-bold text-brand-600 dark:text-brand-400 mt-4 mb-2">
+                    {children}
+                  </h3>
+                ),
+                p: ({ children }) => (
+                  <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed mb-3 font-normal">
+                    {children}
+                  </p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="space-y-1.5 mb-3 pl-4 list-disc text-sm sm:text-base text-slate-700 dark:text-slate-300">
+                    {children}
+                  </ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="space-y-1.5 mb-3 pl-4 list-decimal text-sm sm:text-base text-slate-700 dark:text-slate-300 font-medium">
+                    {children}
+                  </ol>
+                ),
+                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                blockquote: ({ children }) => (
+                  <blockquote className="my-3 p-3.5 rounded-xl border-l-4 border-brand-500 bg-brand-50/50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 text-xs sm:text-sm not-italic shadow-xs">
+                    {children}
+                  </blockquote>
+                ),
+                code: ({ inline, className, children, ...props }: any) => {
+                  const codeString = String(children).replace(/\n$/, "");
+                  const isBlock = !inline && codeString.includes("\n");
 
-          {/* Contextual Dynamic Diagrams & Interactive Sandboxes */}
-          {hasTokenizationRef && currentSlideIndex === 0 && <TokenizationDiagram />}
-          {hasCicoRef && <CicoMatrixDiagram />}
-          {hasCotRef && <CotFlowDiagram />}
-          {hasCompareRef && (
-            <PromptComparisonWidget
-              badPrompt="Write a blog post about artificial intelligence in healthcare."
-              badOutput="AI is transforming healthcare in many ways. Doctors use it to diagnose diseases. Hospitals use computers to schedule appointments. It is very important for the future of medicine."
-              goodPrompt={`Act as a HealthTech Journalist writing for MIT Technology Review.
+                  if (isBlock) {
+                    const codeIdx = Math.abs(codeString.length * 31);
+                    return (
+                      <div className="my-3 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-md">
+                        <div className="flex justify-between items-center px-4 py-2 bg-slate-900 border-b border-slate-800 text-[11px] font-mono text-slate-400">
+                          <span className="flex items-center gap-1.5">
+                            <Terminal size={13} className="text-brand-400" />
+                            <span>Code Snippet</span>
+                          </span>
+                          <button
+                            onClick={() => copyCodeToClipboard(codeString, codeIdx)}
+                            className="flex items-center gap-1 hover:text-white transition-colors p-1"
+                            title="Copy to clipboard"
+                          >
+                            {copiedCodeIndex === codeIdx ? (
+                              <>
+                                <Check size={12} className="text-emerald-400" />
+                                <span className="text-emerald-400 font-bold">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={12} />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <pre className="p-4 overflow-x-auto text-xs font-mono leading-relaxed bg-slate-950 text-slate-200">
+                          <code>{children}</code>
+                        </pre>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <code className="px-1.5 py-0.5 rounded-md font-mono text-xs bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-300 font-bold">
+                      {children}
+                    </code>
+                  );
+                },
+              }}
+            >
+              {visibleSlideContent}
+            </ReactMarkdown>
+
+            {/* Contextual Dynamic Diagrams & Interactive Sandboxes */}
+            {hasTokenizationRef && currentSlideIndex === 1 && <TokenizationDiagram />}
+            {hasCicoRef && <CicoMatrixDiagram />}
+            {hasCotRef && <CotFlowDiagram />}
+            {hasCompareRef && (
+              <PromptComparisonWidget
+                badPrompt="Write a blog post about artificial intelligence in healthcare."
+                badOutput="AI is transforming healthcare in many ways. Doctors use it to diagnose diseases. Hospitals use computers to schedule appointments. It is very important for the future of medicine."
+                goodPrompt={`Act as a HealthTech Journalist writing for MIT Technology Review.
 Topic: Generative AI in diagnostic radiology.
 Constraints:
 - Focus on FDA-cleared computer vision models (e.g. breast cancer screening).
 - Keep length to 3 concise bullet points.
 - Tone: Technical, objective, evidence-based.
 Output: Markdown bulleted list with citation references.`}
-              goodOutput={`• Sensitivity Benchmarks: FDA-cleared DL algorithms have achieved a 94.5% AUC in detecting microcalcifications, outperforming dual-reader baseline panels.
+                goodOutput={`• Sensitivity Benchmarks: FDA-cleared DL algorithms have achieved a 94.5% AUC in detecting microcalcifications, outperforming dual-reader baseline panels.
 • Workflow Integration: Prioritizing triage queues in PACS systems reduced radiologist turnaround times for acute pulmonary embolisms by 37%.
 • Limitations: False-positive rates persist in atypical breast density subgroups, underscoring the necessity of human-in-the-loop oversight.`}
-              explanation="By assigning a specialized persona (MIT Tech Review), specifying the exact sub-domain (radiology), setting clear constraints, and demanding bulleted metric benchmarks, the response jumped from middle-school summary to publishable executive brief."
-            />
-          )}
+                explanation="By assigning a specialized persona (MIT Tech Review), specifying the exact sub-domain (radiology), setting clear constraints, and demanding bulleted metric benchmarks, the response jumped from middle-school summary to publishable executive brief."
+              />
+            )}
+          </div>
         </div>
 
         {/* Bottom Slide Navigation Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
           
           <button
             onClick={handlePrevSlide}
             disabled={currentSlideIndex === 0}
-            className="w-full sm:w-auto btn-secondary py-2.5 px-5 text-xs font-bold flex items-center justify-center gap-2 dark:bg-slate-800 dark:border-slate-700 disabled:opacity-40"
+            className="w-full sm:w-auto btn-secondary py-2 px-5 text-xs font-bold flex items-center justify-center gap-2 dark:bg-slate-800 dark:border-slate-700 disabled:opacity-40"
           >
             <ChevronLeft size={16} />
             <span>Previous Slide</span>
           </button>
 
-          <div className="text-xs text-slate-400 font-medium text-center">
-            Tip: Press Play on Voice Story to listen while reviewing the slide.
+          <div className="text-[11px] text-slate-400 font-medium text-center">
+            {autoPlayVoice ? "Auto-narration is active. Sit back and listen." : "Press Voice Story to listen to this slide."}
           </div>
 
           {currentSlideIndex < slides.length - 1 ? (
             <button
               onClick={handleNextSlide}
-              className="w-full sm:w-auto btn-primary py-2.5 px-6 text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:scale-102 transition-transform"
+              className="w-full sm:w-auto btn-primary py-2 px-6 text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:scale-102 transition-transform"
             >
               <span>Next Slide</span>
               <ChevronRight size={16} />
@@ -711,7 +770,7 @@ Output: Markdown bulleted list with citation references.`}
           ) : (
             <button
               onClick={onCompleteLesson}
-              className="w-full sm:w-auto py-2.5 px-6 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-2 shadow-md hover:scale-102 transition-transform"
+              className="w-full sm:w-auto py-2 px-6 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-2 shadow-md hover:scale-102 transition-transform"
             >
               <CheckCircle2 size={16} />
               <span>{isCompleted ? "Lesson Completed" : "Mark Lesson Complete"}</span>
