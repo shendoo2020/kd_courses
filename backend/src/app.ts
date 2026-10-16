@@ -20,9 +20,9 @@ app.use(cors());
 // so the webhook can receive the raw body for signature verification.
 app.use('/api/checkout', paymentRoutes);
 
-// Apply JSON parsing to all other routes
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Apply JSON parsing to all other routes (10MB limit for base64 avatars and course media)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // API Routes
 app.use('/api/auth', authRoutes);

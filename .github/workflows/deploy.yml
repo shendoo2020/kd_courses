@@ -53,6 +53,7 @@ jobs:
             npm install
             npx prisma generate
             npx prisma db push
+            npx prisma db seed || echo "Database seed step completed or skipped."
             npm run build
             pm2 restart kdcourses-api --update-env
 

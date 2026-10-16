@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { useForm } from "react-hook-form";
 import { 
   Loader2, Save, User, Award, Download, Lock, CheckCircle2, 
-  Sun, Moon, KeyRound, AlertTriangle 
+  Sun, Moon, KeyRound, AlertTriangle, Upload 
 } from "lucide-react";
 import Link from "next/link";
 
@@ -84,6 +84,58 @@ export default function ProfilePage() {
   const chooseAvatar = (url: string) => {
     setSelectedAvatar(url);
     setValue("avatarUrl", url);
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (PNG, JPG, WEBP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size should be less than 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // Optimize & resize on an off-screen canvas to max 256x256
+        const canvas = document.createElement("canvas");
+        const maxDim = 256;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const optimizedBase64 = canvas.toDataURL("image/jpeg", 0.85);
+        setSelectedAvatar(optimizedBase64);
+        setValue("avatarUrl", optimizedBase64);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const onSubmit = async (data: any) => {
@@ -227,9 +279,27 @@ export default function ProfilePage() {
                       </div>
                     )}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    <p className="font-semibold text-slate-700 dark:text-slate-300">Choose from avatar gallery below</p>
-                    <p>or paste an image URL in the field below</p>
+                  <div className="space-y-1.5">
+                    <div>
+                      <input 
+                        ref={fileInputRef} 
+                        type="file" 
+                        accept="image/png,image/jpeg,image/jpg,image/webp" 
+                        className="hidden" 
+                        onChange={handleFileUpload} 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="btn-secondary py-1.5 px-3 text-xs font-bold flex items-center gap-1.5 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 hover:border-brand-500 shadow-xs"
+                      >
+                        <Upload size={14} className="text-brand-500" />
+                        <span>Upload from Computer</span>
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Supports JPG, PNG, WEBP (auto-optimized). Or pick from the presets below.
+                    </p>
                   </div>
                 </div>
 

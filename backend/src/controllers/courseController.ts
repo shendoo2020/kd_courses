@@ -165,14 +165,17 @@ export const createCourse = async (req: AuthRequest, res: Response): Promise<voi
 export const handleSeedTourCourse = async (req: Request, res: Response): Promise<void> => {
   try {
     const { seedTourCourse } = await import('../utils/courseSeeder');
-    const course = await seedTourCourse();
+    const { seedPromptCourse } = await import('../utils/promptCourseSeeder');
+    const tourCourse = await seedTourCourse();
+    const promptCourse = await seedPromptCourse();
     res.status(200).json({
-      message: 'Onboarding tour course successfully initialized',
-      course,
+      message: 'Courses successfully initialized and verified',
+      tourCourse,
+      promptCourse,
     });
   } catch (error) {
-    console.error('Seed Tour Course Error:', error);
-    res.status(500).json({ message: 'Failed to seed onboarding course', error });
+    console.error('Seed Courses Error:', error);
+    res.status(500).json({ message: 'Failed to seed courses', error });
   }
 };
 

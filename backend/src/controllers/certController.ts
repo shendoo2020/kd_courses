@@ -253,12 +253,12 @@ export const generateCertificate = async (req: AuthRequest, res: Response): Prom
     });
 
     // Seal Text
-    const starText = '★ VERIFIED ★';
-    const starWidth = fontBold.widthOfTextAtSize(starText, 8);
+    const starText = 'OFFICIAL SEAL';
+    const starWidth = fontBold.widthOfTextAtSize(starText, 7.5);
     page.drawText(starText, {
       x: sealX - starWidth / 2,
       y: sealY + 5,
-      size: 8,
+      size: 7.5,
       font: fontBold,
       color: deepNavy,
     });
