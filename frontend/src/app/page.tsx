@@ -55,7 +55,7 @@ export default function CatalogPage() {
   }, [searchTerm, selectedCategory, priceFilter]);
 
   return (
-    <div className="bg-surface-subtle min-h-screen pb-24">
+    <div className="bg-surface-subtle dark:bg-slate-950 min-h-screen pb-24 transition-colors">
       {/* Hero Section */}
       <div className="bg-slate-950 text-white relative overflow-hidden border-b border-slate-800">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-900/30 to-slate-950/80 pointer-events-none" />
@@ -71,19 +71,19 @@ export default function CatalogPage() {
           </p>
 
           {/* Search Bar */}
-          <div className="max-w-2xl bg-white rounded-2xl shadow-2xl p-2 flex items-center gap-3 border border-slate-200">
+          <div className="max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-2 flex items-center gap-3 border border-slate-200 dark:border-slate-800">
             <Search className="text-slate-400 ml-3" size={22} />
             <input 
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by topic, skill, or course title..."
-              className="flex-1 px-2 py-3 text-slate-900 placeholder-slate-400 outline-none text-base bg-transparent font-medium"
+              className="flex-1 px-2 py-3 text-slate-900 dark:text-white placeholder-slate-400 outline-none text-base bg-transparent font-medium"
             />
             {searchTerm && (
               <button 
                 onClick={() => setSearchTerm("")}
-                className="text-xs text-slate-400 hover:text-slate-600 px-2 font-semibold"
+                className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-2 font-semibold"
               >
                 Clear
               </button>
@@ -96,7 +96,7 @@ export default function CatalogPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
         
         {/* Category & Filter Tabs */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 pb-6 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 pb-6 border-b border-slate-200 dark:border-slate-800">
           
           {/* Categories */}
           <div className="flex flex-wrap gap-2">
@@ -107,7 +107,7 @@ export default function CatalogPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   selectedCategory === cat 
                     ? "bg-brand-600 text-white shadow-sm" 
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
                 }`}
               >
                 {cat}
@@ -116,22 +116,34 @@ export default function CatalogPage() {
           </div>
 
           {/* Pricing Filters */}
-          <div className="flex items-center gap-2 text-sm bg-white border border-slate-200 rounded-lg p-1">
+          <div className="flex items-center gap-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-1">
             <button
               onClick={() => setPriceFilter("all")}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${priceFilter === "all" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"}`}
+              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${
+                priceFilter === "all" 
+                  ? "bg-slate-900 dark:bg-brand-600 text-white" 
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              }`}
             >
               All Prices
             </button>
             <button
               onClick={() => setPriceFilter("free")}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${priceFilter === "free" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"}`}
+              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${
+                priceFilter === "free" 
+                  ? "bg-slate-900 dark:bg-brand-600 text-white" 
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              }`}
             >
               Free Only
             </button>
             <button
               onClick={() => setPriceFilter("paid")}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${priceFilter === "paid" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"}`}
+              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${
+                priceFilter === "paid" 
+                  ? "bg-slate-900 dark:bg-brand-600 text-white" 
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              }`}
             >
               Paid
             </button>
@@ -141,31 +153,31 @@ export default function CatalogPage() {
 
         {/* Catalog Grid Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             {selectedCategory === "All" ? "Featured Courses" : `${selectedCategory} Courses`}
           </h2>
-          <span className="text-sm text-slate-500 font-semibold">{courses.length} courses available</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400 font-semibold">{courses.length} courses available</span>
         </div>
 
         {/* Cards */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="animate-pulse bg-white rounded-2xl shadow-card h-80 border border-slate-100" />
+              <div key={i} className="animate-pulse bg-white dark:bg-slate-900 rounded-2xl shadow-card h-80 border border-slate-100 dark:border-slate-800" />
             ))}
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
+          <div className="bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 px-6 py-4 rounded-xl">
             {error}
           </div>
         ) : courses.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 p-8">
-            <BookOpen size={48} className="mx-auto text-slate-300 mb-4" />
-            <h3 className="text-lg font-bold text-slate-800 mb-2">No matching courses found</h3>
-            <p className="text-sm text-slate-500 mb-6">Try broadening your search term or selecting a different category.</p>
+          <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8">
+            <BookOpen size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">No matching courses found</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Try broadening your search term or selecting a different category.</p>
             <button 
               onClick={() => { setSearchTerm(""); setSelectedCategory("All"); setPriceFilter("all"); }}
-              className="btn-secondary text-sm"
+              className="btn-secondary text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
             >
               Reset Filters
             </button>
@@ -176,28 +188,28 @@ export default function CatalogPage() {
               <Link 
                 href={`/courses/${course.id}`} 
                 key={course.id} 
-                className="group flex flex-col bg-white rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden border border-slate-100"
+                className="group flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden border border-slate-100 dark:border-slate-800"
               >
                 <div className="h-44 bg-gradient-to-br from-brand-600 via-brand-700 to-slate-900 w-full relative flex items-center justify-center">
                   <BookOpen size={44} className="text-white/60 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-slate-800 text-xs px-2.5 py-1 rounded-md font-bold tracking-wide">
+                  <span className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-slate-800 dark:text-white text-xs px-2.5 py-1 rounded-md font-bold tracking-wide">
                     {course.category || "Academy"}
                   </span>
                 </div>
                 
                 <div className="p-5 flex flex-col flex-grow">
-                  <h3 className="font-bold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2 mb-2">
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2 mb-2">
                     {course.title}
                   </h3>
                   
-                  <p className="text-sm text-slate-500 line-clamp-2 mb-4 flex-grow leading-relaxed">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 flex-grow leading-relaxed">
                     {course.description}
                   </p>
                   
-                  <div className="flex items-center justify-between text-xs text-slate-600 mb-4 pb-4 border-b border-slate-100">
+                  <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-1.5 font-medium">
                       <User size={14} className="text-slate-400" />
-                      <span>{course.instructor.name}</span>
+                      <span>{course.instructor?.name || "KLZ Faculty"}</span>
                     </div>
 
                     {course.avgRating && (
@@ -208,11 +220,11 @@ export default function CatalogPage() {
                     )}
                   </div>
 
-                  <div className="flex justify-between items-center font-black text-slate-900">
+                  <div className="flex justify-between items-center font-black text-slate-900 dark:text-white">
                     <span className="text-lg">
                       {course.price === 0 ? "Free" : `$${course.price.toFixed(2)}`}
                     </span>
-                    <span className="text-brand-600 text-sm font-bold group-hover:translate-x-1 transition-transform">
+                    <span className="text-brand-600 dark:text-brand-400 text-sm font-bold group-hover:translate-x-1 transition-transform">
                       View Syllabus &rarr;
                     </span>
                   </div>

@@ -153,6 +153,16 @@ export const markLessonComplete = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: { module: true }
+    });
+
+    if (!lesson) {
+      res.status(404).json({ message: 'Lesson not found' });
+      return;
+    }
+
     const progress = await prisma.lessonProgress.upsert({
       where: {
         userId_lessonId: { userId: studentId, lessonId }
@@ -161,8 +171,37 @@ export const markLessonComplete = async (req: AuthRequest, res: Response): Promi
       create: { userId: studentId, lessonId, completed: true }
     });
 
-    res.json(progress);
+    // Check if all lessons in the course are now completed (Bug 2)
+    const courseId = lesson.module.courseId;
+    const totalLessons = await prisma.lesson.count({
+      where: { module: { courseId } }
+    });
+
+    const completedLessons = await prisma.lessonProgress.count({
+      where: {
+        userId: studentId,
+        completed: true,
+        lesson: { module: { courseId } }
+      }
+    });
+
+    const isCourseCompleted = totalLessons > 0 && completedLessons >= totalLessons;
+
+    if (isCourseCompleted) {
+      await prisma.enrollment.updateMany({
+        where: { studentId, courseId },
+        data: { status: 'COMPLETED' }
+      });
+    }
+
+    res.json({
+      progress,
+      isCourseCompleted,
+      completedLessons,
+      totalLessons
+    });
   } catch (error) {
+    console.error('Mark Lesson Complete Error:', error);
     res.status(500).json({ message: 'Failed to update progress' });
   }
 };

@@ -27,6 +27,7 @@ model User {
   role         Role         @default(STUDENT)
   avatarUrl    String?
   bio          String?      @db.Text
+  isTemporaryPassword Boolean @default(false)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 

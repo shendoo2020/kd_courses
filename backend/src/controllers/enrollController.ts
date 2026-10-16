@@ -72,14 +72,75 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
       include: {
         course: {
           include: {
-            instructor: { select: { name: true } }
+            instructor: { select: { name: true } },
+            modules: {
+              include: {
+                lessons: { select: { id: true } }
+              }
+            }
           }
         }
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json(enrollments);
+    // Compute progress and update completion status if necessary
+    const enrichedEnrollments = await Promise.all(
+      enrollments.map(async (enr) => {
+        const totalLessons = enr.course.modules.reduce(
+          (acc, mod) => acc + mod.lessons.length,
+          0
+        );
+
+        const completedLessons = await prisma.lessonProgress.count({
+          where: {
+            userId: studentId,
+            completed: true,
+            lesson: { module: { courseId: enr.courseId } }
+          }
+        });
+
+        const progressPercentage = totalLessons > 0
+          ? Math.min(100, Math.round((completedLessons / totalLessons) * 100))
+          : 0;
+
+        const isCompleted = totalLessons > 0 && completedLessons >= totalLessons;
+
+        // Auto-update enrollment status in database
+        if (isCompleted && enr.status !== 'COMPLETED') {
+          await prisma.enrollment.update({
+            where: { id: enr.id },
+            data: { status: 'COMPLETED' }
+          });
+        } else if (!isCompleted && enr.status === 'COMPLETED') {
+          await prisma.enrollment.update({
+            where: { id: enr.id },
+            data: { status: 'ACTIVE' }
+          });
+        }
+
+        return {
+          id: enr.id,
+          studentId: enr.studentId,
+          courseId: enr.courseId,
+          status: isCompleted ? 'COMPLETED' : enr.status,
+          createdAt: enr.createdAt,
+          progressPercentage,
+          completedLessons,
+          totalLessons,
+          course: {
+            id: enr.course.id,
+            title: enr.course.title,
+            description: enr.course.description,
+            price: enr.course.price,
+            category: enr.course.category,
+            instructor: enr.course.instructor
+          }
+        };
+      })
+    );
+
+    res.json(enrichedEnrollments);
   } catch (error) {
     console.error('Dashboard Fetch Error:', error);
     res.status(500).json({ message: 'Failed to fetch student dashboard' });
