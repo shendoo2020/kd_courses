@@ -19,47 +19,125 @@ enum EnrollmentStatus {
   DROPPED
 }
 
-model User {
-  id           String       @id @default(uuid())
-  name         String
-  email        String       @unique
-  passwordHash String
-  role         Role         @default(STUDENT)
-  avatarUrl    String?
-  bio          String?      @db.Text
-  isTemporaryPassword Boolean @default(false)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+enum TargetAudience {
+  K12
+  HIGHER_ED
+  PROFESSIONAL
+}
 
-  coursesTaught Course[]    @relation("InstructorCourses")
-  enrollments   Enrollment[]
-  lessonProgress LessonProgress[]
-  quizAttempts   QuizAttempt[]
-  certificates   Certificate[]
-  reviews        Review[]
-  comments       Comment[]
-  wishlists      Wishlist[]
+enum DeliveryMode {
+  SELF_PACED
+  COHORT_BASED
+  HYBRID
+  IN_PERSON
+}
+
+enum CourseRequestStatus {
+  PENDING_REVIEW
+  APPROVED
+  UNAVAILABLE
+  NO_INSTRUCTOR_AVAILABLE
+  PROPOSAL_SENT
+  REJECTED
+}
+
+enum PrintItemType {
+  SUMMARY_BOOKLET
+  FULL_LECTURE_NOTES
+  STUDY_GUIDE
+  VERIFIED_PHYSICAL_CERTIFICATE
+}
+
+enum PrintOrderStatus {
+  ORDER_RECEIVED
+  PRINTING_IN_PROGRESS
+  DISPATCHED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum EventType {
+  SEMINAR
+  WORKSHOP
+  MENTOR_TALK
+  CAREER_PANEL
+}
+
+enum InstructorAppStatus {
+  NEW_APPLICATION
+  UNDER_REVIEW
+  INTERVIEW_SCHEDULED
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                  String       @id @default(uuid())
+  name                String
+  email               String       @unique
+  passwordHash        String
+  role                Role         @default(STUDENT)
+  avatarUrl           String?
+  bio                 String?      @db.Text
+  isTemporaryPassword Boolean      @default(false)
+  title               String?      // e.g. Principal AI Researcher, Ex-DeepMind
+  organization        String?      // e.g. Stanford University / Google
+  academicCredentials String?      // e.g. Ph.D. in CS, M.Ed.
+  linkedinUrl         String?
+  githubUrl           String?
+  websiteUrl          String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  coursesTaught       Course[]           @relation("InstructorCourses")
+  enrollments         Enrollment[]
+  lessonProgress      LessonProgress[]
+  quizAttempts        QuizAttempt[]
+  certificates        Certificate[]
+  reviews             Review[]
+  comments            Comment[]
+  wishlists           Wishlist[]
+  printOrders         PrintOrder[]
+  eventRegistrations  EventRegistration[]
+  assignedCourseRequests CourseRequest[] @relation("AssignedInstructor")
+  testimonials        Testimonial[]
 }
 
 model Course {
-  id          String       @id @default(uuid())
-  title       String
-  description String
-  syllabus    String       @db.Text
-  price       Float        @default(0.0)
-  category    String       @default("Development")
+  id               String         @id @default(uuid())
+  title            String
+  description      String
+  syllabus         String         @db.Text
+  price            Float          @default(0.0)
+  category         String         @default("Development")
+  targetAudience   TargetAudience @default(PROFESSIONAL)
+  deliveryMode     DeliveryMode   @default(SELF_PACED)
+  startDate        DateTime?
+  endDate          DateTime?
+  durationWeeks    Int?           @default(8)
+  hoursPerWeek     Int?           @default(5)
+  scheduleDetails  String?        // e.g., "Tuesdays & Thursdays, 6:00 PM - 8:00 PM EST"
+  inclusions       String[]       @default([])
+  exclusions       String[]       @default([])
+  prerequisites    String[]       @default([])
+  gradingCriteria  String?        @db.Text
+  attendancePolicy String?        @db.Text
+  materialPrice    Float?         @default(29.99)
   
-  instructorId String
-  instructor   User        @relation("InstructorCourses", fields: [instructorId], references: [id])
+  instructorId     String
+  instructor       User           @relation("InstructorCourses", fields: [instructorId], references: [id])
   
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
-  enrollments Enrollment[]
-  modules     Module[]
-  certificates Certificate[]
-  reviews     Review[]
-  wishlists   Wishlist[]
+  enrollments      Enrollment[]
+  modules          Module[]
+  certificates     Certificate[]
+  reviews          Review[]
+  wishlists        Wishlist[]
+  printOrders      PrintOrder[]
+  testimonials     Testimonial[]
 }
 
 model Review {
@@ -115,7 +193,7 @@ model Module {
 model Lesson {
   id       String   @id @default(uuid())
   title    String
-  content  String   @db.Text // Can be video URL or markdown text
+  content  String   @db.Text
   order    Int      @default(0)
   moduleId String
   module   Module   @relation(fields: [moduleId], references: [id])
@@ -192,4 +270,131 @@ model Certificate {
   pdfUrl    String?
   
   @@unique([userId, courseId])
+}
+
+// Pillar 1: Custom Course Request System (B2B & Cohort On-Demand)
+model CourseRequest {
+  id                    String              @id @default(uuid())
+  requesterName         String
+  email                 String
+  phone                 String?
+  organization          String?
+  targetAudience        TargetAudience      @default(PROFESSIONAL)
+  topic                 String
+  studentCount          Int                 @default(10)
+  neededTimeframe       String              // e.g., "Next 4 weeks", "Q1 Semester"
+  deliveryMode          DeliveryMode        @default(HYBRID)
+  specificRequirements  String?             @db.Text
+  status                CourseRequestStatus @default(PENDING_REVIEW)
+  adminNotes            String?             @db.Text
+  
+  assignedInstructorId  String?
+  assignedInstructor    User?               @relation("AssignedInstructor", fields: [assignedInstructorId], references: [id])
+  
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+}
+
+// Pillar 2: Print-on-Demand & Home Delivery Fulfillment
+model PrintOrder {
+  id             String           @id @default(uuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id])
+  courseId       String?
+  course         Course?          @relation(fields: [courseId], references: [id])
+  itemType       PrintItemType    @default(SUMMARY_BOOKLET)
+  quantity       Int              @default(1)
+  recipientName  String
+  phone          String
+  addressLine1   String
+  addressLine2   String?
+  city           String
+  state          String
+  postalCode     String
+  country        String           @default("USA")
+  totalAmount    Float            @default(19.99)
+  paymentStatus  String           @default("PAID")
+  status         PrintOrderStatus @default(ORDER_RECEIVED)
+  trackingNumber String?
+  carrier        String?          // e.g., FedEx, DHL, USPS
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+// Pillar 3: Seminars & Community Engagement
+model Event {
+  id             String              @id @default(uuid())
+  title          String
+  description    String              @db.Text
+  speakerName    String
+  speakerTitle   String
+  speakerAvatar  String?
+  speakerBio     String?             @db.Text
+  eventType      EventType           @default(SEMINAR)
+  targetAudience TargetAudience      @default(PROFESSIONAL)
+  startTime      DateTime
+  endTime        DateTime
+  isVirtual      Boolean             @default(true)
+  locationOrUrl  String?             // Zoom link or campus auditorium
+  maxCapacity    Int                 @default(100)
+  bannerUrl      String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  registrations  EventRegistration[]
+}
+
+model EventRegistration {
+  id            String   @id @default(uuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  attendeeName  String
+  attendeeEmail String
+  organization  String?
+  attended      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@unique([eventId, attendeeEmail])
+}
+
+// Pillar 4: Instructor Onboarding & Recruitment Application
+model InstructorApplication {
+  id                    String              @id @default(uuid())
+  fullName              String
+  email                 String
+  phone                 String
+  currentAffiliation    String              // University, Institute or Company
+  highestDegree         String              // e.g., M.S., Ph.D., Lead Architect
+  linkedinUrl           String?
+  portfolioUrl          String?
+  resumeUrl             String?
+  courseProposalTitle   String
+  courseProposalSummary String              @db.Text
+  sampleVideoUrl        String?
+  targetAudience        TargetAudience      @default(PROFESSIONAL)
+  status                InstructorAppStatus @default(NEW_APPLICATION)
+  reviewNotes           String?             @db.Text
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+}
+
+// Pillar 6: Institutional Trust & Social Proof
+model Testimonial {
+  id              String   @id @default(uuid())
+  studentName     String
+  studentRole     String   // e.g. "Senior ML Engineer"
+  companyOrSchool String   // e.g. "Meta / Stanford Alum"
+  avatarUrl       String?
+  quote           String   @db.Text
+  rating          Int      @default(5)
+  isFeatured      Boolean  @default(true)
+  
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  courseId        String?
+  course          Course?  @relation(fields: [courseId], references: [id])
+  certificateId   String?
+  createdAt       DateTime @default(now())
 }

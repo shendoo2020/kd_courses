@@ -132,16 +132,46 @@ export default function RootLayout({
                   </span>
                 </Link>
 
-                <nav className="hidden md:flex md:space-x-4">
+                <nav className="hidden lg:flex lg:space-x-1">
                   <Link 
                     href="/" 
-                    className="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-3 py-2 text-sm font-semibold transition-colors"
+                    className="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-3 py-2 text-xs xl:text-sm font-semibold transition-colors"
                   >
                     Catalog
                   </Link>
                   <Link 
+                    href="/custom-courses" 
+                    className="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-3 py-2 text-xs xl:text-sm font-semibold transition-colors"
+                  >
+                    Custom Cohorts
+                  </Link>
+                  <Link 
+                    href="/events" 
+                    className="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-3 py-2 text-xs xl:text-sm font-semibold transition-colors"
+                  >
+                    Seminars
+                  </Link>
+                  <Link 
+                    href="/teach" 
+                    className="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-3 py-2 text-xs xl:text-sm font-semibold transition-colors"
+                  >
+                    Teach
+                  </Link>
+                  <Link 
+                    href="/stories" 
+                    className="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-3 py-2 text-xs xl:text-sm font-semibold transition-colors"
+                  >
+                    Stories
+                  </Link>
+                  <Link 
+                    href="/about" 
+                    className="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-3 py-2 text-xs xl:text-sm font-semibold transition-colors"
+                  >
+                    About Us
+                  </Link>
+                  <Link 
                     href="/dashboard" 
-                    className="text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-3 py-2 text-sm font-semibold transition-colors"
+                    className="text-brand-600 dark:text-brand-400 hover:underline px-3 py-2 text-xs xl:text-sm font-bold transition-colors"
                   >
                     My Learning
                   </Link>
@@ -308,12 +338,14 @@ export default function RootLayout({
 
                 {/* Quick Links */}
                 <div>
-                  <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Quick Links</h3>
+                  <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Curriculum & Portals</h3>
                   <ul className="space-y-2.5 text-sm">
                     <li><Link href="/" className="hover:text-white transition-colors">Course Catalog</Link></li>
-                    <li><Link href="/dashboard" className="hover:text-white transition-colors">Student Dashboard</Link></li>
-                    <li><Link href="/admin/dashboard" className="hover:text-white transition-colors">Instructor Portal</Link></li>
-                    <li><Link href="/register" className="hover:text-white transition-colors">Become a Student</Link></li>
+                    <li><Link href="/custom-courses" className="hover:text-white transition-colors">Custom Cohort Training</Link></li>
+                    <li><Link href="/events" className="hover:text-white transition-colors">Seminars & Keynotes</Link></li>
+                    <li><Link href="/teach" className="hover:text-white transition-colors">Teach with Us</Link></li>
+                    <li><Link href="/stories" className="hover:text-white transition-colors">Student Outcomes</Link></li>
+                    <li><Link href="/about" className="hover:text-white transition-colors">About & Faculty</Link></li>
                   </ul>
                 </div>
 

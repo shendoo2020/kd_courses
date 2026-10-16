@@ -4,7 +4,7 @@ import { AuthRequest } from '../middlewares/authMiddleware';
 
 export const getCatalog = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { search, category, priceType } = req.query;
+    const { search, category, priceType, targetAudience, deliveryMode } = req.query;
 
     const whereClause: any = {};
 
@@ -21,6 +21,16 @@ export const getCatalog = async (req: Request, res: Response): Promise<void> => 
       whereClause.category = category;
     }
 
+    // Target Audience filter (K12, HIGHER_ED, PROFESSIONAL)
+    if (targetAudience && typeof targetAudience === 'string' && targetAudience !== 'ALL') {
+      whereClause.targetAudience = targetAudience;
+    }
+
+    // Delivery Mode filter (SELF_PACED, COHORT_BASED, HYBRID, IN_PERSON)
+    if (deliveryMode && typeof deliveryMode === 'string' && deliveryMode !== 'ALL') {
+      whereClause.deliveryMode = deliveryMode;
+    }
+
     // Price filter (free vs paid)
     if (priceType === 'free') {
       whereClause.price = 0;
@@ -32,23 +42,37 @@ export const getCatalog = async (req: Request, res: Response): Promise<void> => 
       where: whereClause,
       include: {
         instructor: {
-          select: { name: true, email: true }
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            title: true,
+            organization: true,
+            academicCredentials: true,
+          },
         },
         reviews: {
-          select: { rating: true }
-        }
+          select: { rating: true },
+        },
+        modules: {
+          select: { id: true, title: true, _count: { select: { lessons: true } } },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
-    // Compute average ratings for each course
+    // Compute average ratings and lesson count for each course
     const coursesWithRating = courses.map(course => {
       const totalRatings = course.reviews.reduce((acc, r) => acc + r.rating, 0);
       const avgRating = course.reviews.length > 0 ? (totalRatings / course.reviews.length).toFixed(1) : null;
+      const totalLessons = course.modules.reduce((acc, m) => acc + m._count.lessons, 0);
+
       return {
         ...course,
         avgRating,
-        reviewCount: course.reviews.length
+        reviewCount: course.reviews.length,
+        totalLessons,
       };
     });
     
@@ -67,15 +91,44 @@ export const getCourseDetails = async (req: Request, res: Response): Promise<voi
       where: { id },
       include: {
         instructor: {
-          select: { name: true, email: true, role: true }
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            avatarUrl: true,
+            bio: true,
+            title: true,
+            organization: true,
+            academicCredentials: true,
+            linkedinUrl: true,
+            githubUrl: true,
+            websiteUrl: true,
+          },
+        },
+        modules: {
+          orderBy: { order: 'asc' },
+          include: {
+            lessons: {
+              orderBy: { order: 'asc' },
+              select: { id: true, title: true, order: true },
+            },
+            quizzes: {
+              select: { id: true, title: true },
+            },
+          },
         },
         reviews: {
           include: {
-            user: { select: { name: true, avatarUrl: true } }
+            user: { select: { name: true, avatarUrl: true } },
           },
-          orderBy: { createdAt: 'desc' }
-        }
-      }
+          orderBy: { createdAt: 'desc' },
+        },
+        testimonials: {
+          where: { isFeatured: true },
+          take: 4,
+        },
+      },
     });
 
     if (!course) {
@@ -108,7 +161,7 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
 
     // Verify enrollment
     const enrollment = await prisma.enrollment.findUnique({
-      where: { studentId_courseId: { studentId: userId, courseId } }
+      where: { studentId_courseId: { studentId: userId, courseId } },
     });
 
     if (!enrollment) {
@@ -119,7 +172,7 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
     const review = await prisma.review.upsert({
       where: { userId_courseId: { userId, courseId } },
       update: { rating: Number(rating), comment: comment || '' },
-      create: { userId, courseId, rating: Number(rating), comment: comment || '' }
+      create: { userId, courseId, rating: Number(rating), comment: comment || '' },
     });
 
     res.status(201).json(review);
@@ -131,7 +184,27 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
 
 export const createCourse = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { title, description, syllabus, price, category } = req.body;
+    const {
+      title,
+      description,
+      syllabus,
+      price,
+      category,
+      targetAudience,
+      deliveryMode,
+      startDate,
+      endDate,
+      durationWeeks,
+      hoursPerWeek,
+      scheduleDetails,
+      inclusions,
+      exclusions,
+      prerequisites,
+      gradingCriteria,
+      attendancePolicy,
+      materialPrice,
+    } = req.body;
+    
     const instructorId = req.user?.id;
 
     if (!instructorId) {
@@ -151,8 +224,21 @@ export const createCourse = async (req: AuthRequest, res: Response): Promise<voi
         syllabus,
         price: price ? parseFloat(price) : 0.0,
         category: category || 'Development',
+        targetAudience: targetAudience || 'PROFESSIONAL',
+        deliveryMode: deliveryMode || 'SELF_PACED',
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        durationWeeks: durationWeeks ? parseInt(durationWeeks, 10) : 8,
+        hoursPerWeek: hoursPerWeek ? parseInt(hoursPerWeek, 10) : 5,
+        scheduleDetails: scheduleDetails || null,
+        inclusions: Array.isArray(inclusions) ? inclusions : [],
+        exclusions: Array.isArray(exclusions) ? exclusions : [],
+        prerequisites: Array.isArray(prerequisites) ? prerequisites : [],
+        gradingCriteria: gradingCriteria || null,
+        attendancePolicy: attendancePolicy || null,
+        materialPrice: materialPrice ? parseFloat(materialPrice) : 29.99,
         instructorId,
-      }
+      },
     });
 
     res.status(201).json(newCourse);
@@ -178,4 +264,3 @@ export const handleSeedTourCourse = async (req: Request, res: Response): Promise
     res.status(500).json({ message: 'Failed to seed courses', error });
   }
 };
-

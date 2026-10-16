@@ -9,6 +9,11 @@ import paymentRoutes from './routes/paymentRoutes';
 import certRoutes from './routes/certRoutes';
 import userRoutes from './routes/userRoutes';
 import instructorRoutes from './routes/instructorRoutes';
+import courseRequestRoutes from './routes/courseRequestRoutes';
+import deliveryRoutes from './routes/deliveryRoutes';
+import eventRoutes from './routes/eventRoutes';
+import instructorAppRoutes from './routes/instructorAppRoutes';
+import testimonialRoutes from './routes/testimonialRoutes';
 import { errorHandler } from './middlewares/errorMiddleware';
 
 const app: Application = express();
@@ -24,7 +29,7 @@ app.use('/api/checkout', paymentRoutes);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// API Routes
+// Core API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollRoutes);
@@ -33,6 +38,13 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/certificates', certRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/instructor/analytics', instructorRoutes);
+
+// Educational Expansion & Services Routes
+app.use('/api/course-requests', courseRequestRoutes);
+app.use('/api/delivery', deliveryRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/instructor-applications', instructorAppRoutes);
+app.use('/api/testimonials', testimonialRoutes);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
