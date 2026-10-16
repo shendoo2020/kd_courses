@@ -8,7 +8,7 @@ import { ArrowLeft, CheckCircle2, Circle, PlayCircle, FileText, Loader2, Menu } 
 import dynamic from 'next/dynamic';
 
 // Dynamically import react-player to avoid hydration errors with Next.js SSR
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
+const ReactPlayer = dynamic(() => import('react-player'), { ssr: false }) as any;
 
 export default function StudentClassroomPage() {
   const { id } = useParams();
