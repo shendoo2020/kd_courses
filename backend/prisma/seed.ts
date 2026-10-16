@@ -1,10 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import { seedTourCourse } from '../src/utils/courseSeeder';
+import { seedPromptCourse } from '../src/utils/promptCourseSeeder';
 
 const prisma = new PrismaClient();
 
 async function main() {
   await seedTourCourse(prisma);
+  await seedPromptCourse(prisma);
 }
 
 main()
