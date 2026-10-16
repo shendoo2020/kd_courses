@@ -1,15 +1,19 @@
 import { Router } from 'express';
-import { getCatalog, getCourseDetails, createCourse } from '../controllers/courseController';
+import { getCatalog, getCourseDetails, createCourse, addReview } from '../controllers/courseController';
 import { protect, authorizeRoles } from '../middlewares/authMiddleware';
 
 const router = Router();
 
 // Public Routes
-// GET /api/courses
+// GET /api/courses (supports ?search= & ?category= & ?priceType=)
 router.get('/', getCatalog);
 
 // GET /api/courses/:id
 router.get('/:id', getCourseDetails);
+
+// Protected Student Review Route
+// POST /api/courses/:id/reviews
+router.post('/:id/reviews', protect, addReview);
 
 // Protected Admin/Instructor Routes
 // POST /api/courses

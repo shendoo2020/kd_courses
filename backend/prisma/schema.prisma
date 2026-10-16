@@ -35,6 +35,7 @@ model User {
   lessonProgress LessonProgress[]
   quizAttempts   QuizAttempt[]
   certificates   Certificate[]
+  reviews        Review[]
 }
 
 model Course {
@@ -43,6 +44,7 @@ model Course {
   description String
   syllabus    String       @db.Text
   price       Float        @default(0.0)
+  category    String       @default("Development")
   
   instructorId String
   instructor   User        @relation("InstructorCourses", fields: [instructorId], references: [id])
@@ -53,6 +55,23 @@ model Course {
   enrollments Enrollment[]
   modules     Module[]
   certificates Certificate[]
+  reviews     Review[]
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int      @default(5)
+  comment   String   @db.Text
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  
+  createdAt DateTime @default(now())
+
+  @@unique([userId, courseId])
 }
 
 model Enrollment {

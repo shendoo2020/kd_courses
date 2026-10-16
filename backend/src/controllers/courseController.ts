@@ -4,16 +4,55 @@ import { AuthRequest } from '../middlewares/authMiddleware';
 
 export const getCatalog = async (req: Request, res: Response): Promise<void> => {
   try {
+    const { search, category, priceType } = req.query;
+
+    const whereClause: any = {};
+
+    // Search filter across title and description
+    if (search && typeof search === 'string' && search.trim() !== '') {
+      whereClause.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Category filter
+    if (category && typeof category === 'string' && category !== 'All') {
+      whereClause.category = category;
+    }
+
+    // Price filter (free vs paid)
+    if (priceType === 'free') {
+      whereClause.price = 0;
+    } else if (priceType === 'paid') {
+      whereClause.price = { gt: 0 };
+    }
+
     const courses = await prisma.course.findMany({
+      where: whereClause,
       include: {
         instructor: {
           select: { name: true, email: true }
+        },
+        reviews: {
+          select: { rating: true }
         }
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    // Compute average ratings for each course
+    const coursesWithRating = courses.map(course => {
+      const totalRatings = course.reviews.reduce((acc, r) => acc + r.rating, 0);
+      const avgRating = course.reviews.length > 0 ? (totalRatings / course.reviews.length).toFixed(1) : null;
+      return {
+        ...course,
+        avgRating,
+        reviewCount: course.reviews.length
+      };
+    });
     
-    res.json(courses);
+    res.json(coursesWithRating);
   } catch (error) {
     console.error('Get Catalog Error:', error);
     res.status(500).json({ message: 'Failed to fetch course catalog' });
@@ -29,6 +68,12 @@ export const getCourseDetails = async (req: Request, res: Response): Promise<voi
       include: {
         instructor: {
           select: { name: true, email: true, role: true }
+        },
+        reviews: {
+          include: {
+            user: { select: { name: true, avatarUrl: true } }
+          },
+          orderBy: { createdAt: 'desc' }
         }
       }
     });
@@ -45,9 +90,48 @@ export const getCourseDetails = async (req: Request, res: Response): Promise<voi
   }
 };
 
+export const addReview = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id: courseId } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if (!rating || rating < 1 || rating > 5) {
+      res.status(400).json({ message: 'Rating must be between 1 and 5' });
+      return;
+    }
+
+    // Verify enrollment
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { studentId_courseId: { studentId: userId, courseId } }
+    });
+
+    if (!enrollment) {
+      res.status(403).json({ message: 'Only enrolled students can review this course' });
+      return;
+    }
+
+    const review = await prisma.review.upsert({
+      where: { userId_courseId: { userId, courseId } },
+      update: { rating: Number(rating), comment: comment || '' },
+      create: { userId, courseId, rating: Number(rating), comment: comment || '' }
+    });
+
+    res.status(201).json(review);
+  } catch (error) {
+    console.error('Add Review Error:', error);
+    res.status(500).json({ message: 'Failed to submit review' });
+  }
+};
+
 export const createCourse = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { title, description, syllabus, price } = req.body;
+    const { title, description, syllabus, price, category } = req.body;
     const instructorId = req.user?.id;
 
     if (!instructorId) {
@@ -66,6 +150,7 @@ export const createCourse = async (req: AuthRequest, res: Response): Promise<voi
         description,
         syllabus,
         price: price ? parseFloat(price) : 0.0,
+        category: category || 'Development',
         instructorId,
       }
     });
