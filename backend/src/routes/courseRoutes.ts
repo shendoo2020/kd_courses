@@ -1,8 +1,12 @@
 import { Router } from 'express';
-import { getCatalog, getCourseDetails, createCourse, addReview } from '../controllers/courseController';
+import { getCatalog, getCourseDetails, createCourse, addReview, handleSeedTourCourse } from '../controllers/courseController';
 import { protect, authorizeRoles } from '../middlewares/authMiddleware';
 
 const router = Router();
+
+// Platform Onboarding Tour Seeder endpoint
+router.post('/seed-tour', handleSeedTourCourse);
+router.get('/seed-tour', handleSeedTourCourse);
 
 // Public Routes
 // GET /api/courses (supports ?search= & ?category= & ?priceType=)
