@@ -1,21 +1,32 @@
-# KDCourses Workspace Context
+# KLZ Academy Workspace Context
 
-## Directory Overview
-This directory serves as the root workspace for architecting and developing "KDCourses," a premium, highly scalable Course Management and Registration Platform (inspired by Coursera and DeepLearning.AI). Currently, the workspace contains the master project specification and will soon house the complete frontend and backend codebases.
+## Project Overview
+This repository contains **KLZ Academy**, a production-grade Course Management and Interactive Learning Platform built with a decoupled architecture inspired by Coursera and DeepLearning.AI.
 
-## Key Files
-*   **`Project_MasterPrompt.txt`**: The foundational specification document. It defines the "Elite Web Development Agency" persona protocol, the strict 5-phase execution plan, and the stringent constraints for code quality, UI design, and deployment. **This file dictates the operational rules for this workspace.**
+- **Frontend (`frontend/`):** Next.js 14 App Router, React 18, TypeScript, Tailwind CSS, Lucide Icons, React Hook Form, `react-player`.
+- **Backend (`backend/`):** Node.js 20 LTS, Express.js REST API, TypeScript, JWT stateless authentication, bcryptjs, Stripe SDK, `pdf-lib`.
+- **Database:** PostgreSQL 16 with Prisma ORM (`backend/prisma/schema.prisma`).
+- **DevOps & Production:** Ubuntu 24.04 LTS Server with Nginx (reverse proxy), PM2 (process manager), and GitHub Actions automated CI/CD pipeline (`.github/workflows/deploy.yml`).
 
-## Usage & Development Conventions
-When interacting with this workspace and generating code, you MUST adhere to the following rules derived from the master prompt:
+## Key Directory Structure
+*   `frontend/src/app/`: Next.js 14 App Router pages:
+    *   `/`: Catalog landing page with search, categories, and price filters.
+    *   `/(auth)/login/` & `/(auth)/register/`: Role-based authentication.
+    *   `/courses/[id]/`: Public course details with syllabus, reviews, and Stripe checkout.
+    *   `/courses/[id]/learn/`: Interactive Classroom with video player, reading labs, checkpoint quizzes, and progress tracking.
+    *   `/dashboard/`: Student enrolled courses and progress overview.
+    *   `/dashboard/profile/`: Public profile editor and certificate generator/download.
+    *   `/admin/dashboard/`: Instructor portal and course listing.
+    *   `/admin/courses/new/`: Course creation wizard.
+    *   `/admin/courses/[id]/edit/`: Curriculum & syllabus builder with quiz authoring.
+*   `backend/src/`: Express REST API:
+    *   `controllers/`: Business logic for Auth, Courses, Reviews, Classroom, Quizzes, Stripe, Certificates, and Users.
+    *   `routes/`: Modular Express route definitions with JWT protection and role enforcement.
+    *   `middlewares/`: `authMiddleware.ts` (JWT verification and role guards) and `errorMiddleware.ts`.
+    *   `prisma/schema.prisma`: Schema definitions for Users, Courses, Enrollments, Modules, Lessons, LessonProgress, Quizzes, Questions, Options, QuizAttempts, Certificates, and Reviews.
 
-*   **Role-Playing Protocol**: Adopt the personas of the 5 senior experts: Lead System Architect, Senior UX/UI Designer, Lead Backend Engineer, Senior Frontend Engineer, and DevOps & Validation Engineer.
-*   **Phased Execution**: Progress strictly through the defined sequential phases:
-    1. Architecture & Tech Stack
-    2. Database Schema & Backend APIs
-    3. Frontend Development
-    4. Validation & Security
-    5. Ubuntu Server Deployment Guide
-*   **Absolute Code Quality**: Write strictly production-grade code. **NEVER use lazy placeholders** (e.g., `// ... rest of the code`). Ensure code is easily copy-pasteable into an IDE.
-*   **UI/UX Standards**: Deliver a sleek, academic, minimalist, and highly professional interface using modern components (Tailwind CSS, Shadcn UI). Use a premium color palette (deep blues, clean whites, subtle grays).
-*   **Target Deployment**: Design architecture with a production-grade Ubuntu Linux Server (Nginx, PM2/Docker, SSL) as the final target environment.
+## Development & Contribution Standards
+*   **Production Quality:** NEVER use lazy placeholders like `// ... rest of code` or partial implementations.
+*   **Design & Theme:** Adhere strictly to the KLZ Academy palette (`brand-600` primary blue, `slate-950` dark surfaces, `slate-50` subtle backgrounds).
+*   **Type Safety:** Adhere to strict TypeScript typing across all controllers, models, and UI components.
+*   **CI/CD Pipeline:** Every push to `main` triggers `.github/workflows/deploy.yml`, which tests, migrates, builds, and deploys directly to the production server. Ensure local builds (`npm run build` in both `frontend` and `backend`) pass with zero errors before committing.
