@@ -87,6 +87,12 @@ export const getClassroom = async (req: AuthRequest, res: Response): Promise<voi
               include: {
                 progress: {
                   where: { userId: studentId } // Only fetch this specific student's progress
+                },
+                comments: {
+                  include: {
+                    user: { select: { name: true, role: true, avatarUrl: true } }
+                  },
+                  orderBy: { createdAt: 'desc' }
                 }
               }
             },
@@ -99,6 +105,40 @@ export const getClassroom = async (req: AuthRequest, res: Response): Promise<voi
     res.json(classroom);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch classroom data' });
+  }
+};
+
+// Student & Instructor: Add a comment/question to a lesson
+export const addLessonComment = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { lessonId } = req.params;
+    const { text } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if (!text || text.trim() === '') {
+      res.status(400).json({ message: 'Comment text cannot be empty' });
+      return;
+    }
+
+    const comment = await prisma.comment.create({
+      data: {
+        text,
+        lessonId,
+        userId
+      },
+      include: {
+        user: { select: { name: true, role: true, avatarUrl: true } }
+      }
+    });
+
+    res.status(201).json(comment);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to post comment' });
   }
 };
 

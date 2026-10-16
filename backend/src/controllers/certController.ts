@@ -95,3 +95,33 @@ export const generateCertificate = async (req: AuthRequest, res: Response): Prom
     res.status(500).json({ message: 'Failed to generate certificate' });
   }
 };
+
+// Public: Verify a Certificate by its unique ID
+export const verifyCertificate = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { certId } = req.params;
+
+    const cert = await prisma.certificate.findUnique({
+      where: { id: certId },
+      include: {
+        user: { select: { name: true } },
+        course: { select: { title: true, description: true } }
+      }
+    });
+
+    if (!cert) {
+      res.status(404).json({ valid: false, message: 'Certificate not found or invalid' });
+      return;
+    }
+
+    res.json({
+      valid: true,
+      certificateId: cert.id,
+      studentName: cert.user.name,
+      courseTitle: cert.course.title,
+      issueDate: cert.issueDate
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error verifying certificate' });
+  }
+};

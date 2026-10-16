@@ -259,7 +259,7 @@ export default function StudentClassroomPage() {
 
             {/* Completion Footer */}
             {!isQuiz && (
-              <div className="flex justify-between items-center py-6 border-t border-slate-200 mt-12">
+              <div className="flex justify-between items-center py-6 border-t border-slate-200 mt-12 mb-10">
                 <div>
                   {isCompleted(activeLesson) ? (
                     <span className="flex items-center gap-2 text-green-700 font-bold bg-green-50 px-4 py-2 rounded-full border border-green-200 text-xs">
@@ -277,6 +277,70 @@ export default function StudentClassroomPage() {
                 )}
               </div>
             )}
+
+            {/* LESSON Q&A DISCUSSION FORUM */}
+            <div className="pt-8 border-t border-slate-200">
+              <h3 className="text-xl font-black text-slate-900 tracking-tight mb-6 flex items-center gap-2">
+                <span>Lesson Q&A & Discussion</span>
+                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
+                  {activeLesson.comments?.length || 0}
+                </span>
+              </h3>
+
+              {/* Add comment form */}
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const input = (e.currentTarget.elements.namedItem('commentText') as HTMLInputElement);
+                  if (!input.value.trim()) return;
+                  try {
+                    await api.post(`/classroom/lessons/${activeLesson.id}/comments`, { text: input.value });
+                    input.value = '';
+                    fetchClassroom();
+                  } catch (err) {
+                    alert("Failed to post comment.");
+                  }
+                }}
+                className="flex gap-3 mb-8"
+              >
+                <input 
+                  type="text" 
+                  name="commentText" 
+                  placeholder="Ask a question or share a thought on this lecture..."
+                  className="flex-1 px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium outline-none focus:border-brand-500 bg-white"
+                  required
+                />
+                <button type="submit" className="btn-primary text-xs font-bold px-5 py-2.5">
+                  Post Question
+                </button>
+              </form>
+
+              {/* Comments list */}
+              {activeLesson.comments && activeLesson.comments.length > 0 ? (
+                <div className="space-y-4">
+                  {activeLesson.comments.map((comment: any) => (
+                    <div key={comment.id} className="p-4 bg-slate-50/80 rounded-xl border border-slate-100 text-sm">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-bold text-slate-900 flex items-center gap-2">
+                          {comment.user.name}
+                          {comment.user.role === 'INSTRUCTOR' && (
+                            <span className="bg-brand-100 text-brand-700 text-[10px] px-2 py-0.5 rounded font-black uppercase">
+                              Instructor
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-[11px] text-slate-400">
+                          {new Date(comment.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-slate-700 leading-relaxed font-normal">{comment.text}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">No questions posted yet for this lesson. Be the first to ask!</p>
+              )}
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center text-slate-400 p-8 text-center font-semibold">

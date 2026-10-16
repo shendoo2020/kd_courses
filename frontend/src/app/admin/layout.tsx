@@ -29,6 +29,13 @@ export default function AdminLayout({
               <PlusCircle size={20} />
               <span className="font-medium">Create Course</span>
             </Link>
+            <Link 
+              href="/admin/analytics" 
+              className="flex items-center gap-3 px-3 py-2 text-slate-700 rounded-md hover:bg-brand-50 hover:text-brand-600 transition-colors"
+            >
+              <span className="font-bold text-green-600">$</span>
+              <span className="font-medium">Analytics & Revenue</span>
+            </Link>
           </nav>
         </div>
       </aside>

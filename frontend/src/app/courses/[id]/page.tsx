@@ -140,13 +140,29 @@ export default function CourseDetailPage() {
                 </div>
               )}
               
-              <button 
-                onClick={handleEnroll} 
-                disabled={isEnrolling || enrollMessage?.type === 'success'}
-                className="btn-primary w-full text-base font-bold py-4 mb-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
-              >
-                {isEnrolling ? "Processing..." : course.price > 0 ? "Enroll with Stripe Checkout" : "Enroll for Free"}
-              </button>
+              <div className="flex gap-2 mb-4">
+                <button 
+                  onClick={handleEnroll} 
+                  disabled={isEnrolling || enrollMessage?.type === 'success'}
+                  className="btn-primary flex-1 text-base font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                >
+                  {isEnrolling ? "Processing..." : course.price > 0 ? "Enroll with Stripe Checkout" : "Enroll for Free"}
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      await api.post(`/users/wishlist/${id}`);
+                      alert("Added to your wishlist!");
+                    } catch (e) {
+                      alert("Please log in to save to wishlist.");
+                    }
+                  }}
+                  className="px-4 border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors text-slate-600 hover:text-red-500 flex items-center justify-center"
+                  title="Save to Wishlist"
+                >
+                  <Star size={20} />
+                </button>
+              </div>
               
               <p className="text-center text-xs text-slate-500 font-medium mb-5">Lifetime access with verifiable certificate.</p>
               

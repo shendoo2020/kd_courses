@@ -8,6 +8,7 @@ import quizRoutes from './routes/quizRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import certRoutes from './routes/certRoutes';
 import userRoutes from './routes/userRoutes';
+import instructorRoutes from './routes/instructorRoutes';
 import { errorHandler } from './middlewares/errorMiddleware';
 
 const app: Application = express();
@@ -31,6 +32,7 @@ app.use('/api/classroom', classroomRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/certificates', certRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/instructor/analytics', instructorRoutes);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
