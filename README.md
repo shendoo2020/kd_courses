@@ -1,6 +1,6 @@
 # 🎓 KLZ Academy
 
-> **KLZ Academy** is a modern, production-grade Course Management and Interactive Learning Platform inspired by Coursera and DeepLearning.AI. It features video lectures, reading labs, automated checkpoint quizzes, Stripe payments, verifiable PDF certificates, student reviews, and an instructor curriculum builder.
+> **KLZ Academy** is a modern, production-grade Course Management and Interactive Learning Platform inspired by Coursera and DeepLearning.AI. It features video lectures, reading labs, automated checkpoint quizzes, Stripe payments, verifiable PDF certificates, student reviews, role-based auth, email recovery, and an instructor curriculum builder.
 
 [![Deploy to Ubuntu Server](https://github.com/shendoo2020/kd_courses/actions/workflows/deploy.yml/badge.svg)](https://github.com/shendoo2020/kd_courses/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -26,6 +26,7 @@
 - [Database Schema & Prisma](#-database-schema--prisma)
 - [API Reference](#-api-reference)
 - [Production Deployment & CI/CD](#-production-deployment--cicd)
+- [Operational Lessons Learned & CLI Tips (LLCs)](#-operational-lessons-learned--cli-tips-llcs)
 - [Contributing & Code Standards](#-contributing--code-standards)
 
 ---
@@ -66,18 +67,18 @@ KLZ Academy is engineered as a decoupled monorepo architecture:
 
 ### For Students
 - **Course Discovery & Filtering:** Real-time search with instant category filters (*Development, Data Science, Business, Design, Cybersecurity*) and price toggles (*Free vs. Paid*).
-- **Course Details:** Full syllabus preview, instructor biographies, ratings, and course reviews.
-- **Stripe Checkout Integration:** One-click redirection to Stripe Checkout for secure credit card purchases. Free courses enroll instantly.
-- **Interactive Classroom:** Coursera-style curriculum sidebar, dynamic video lecture player (`react-player`), and formatted reading materials.
-- **Knowledge Checkpoints (Quizzes):** Interactive multiple-choice assessments with immediate scoring and progress updates.
-- **Progress Tracking:** Automatic lecture completion and syllabus checkmarks.
-- **Verifiable PDF Certificates:** Dynamic, cryptographic client-side download of completion certificates generated on the fly via `pdf-lib`.
-- **Student Reviews & Ratings:** 1 to 5 star rating submission with community feedback.
-- **Student Profile:** Bio editing and certificate trophy case.
+- **Course Details & Dynamic CTAs:** Detailed syllabus preview, instructor biographies, ratings, reviews, and adaptive buttons ("Start Now" vs "Continue Learning" vs "Review Course").
+- **Stripe Checkout Integration:** One-click redirection to Stripe Checkout for secure purchases. Free courses enroll instantly.
+- **Interactive Classroom:** Fullscreen mobile-optimized layout (100vh without distracting global headers), previous & next lesson navigation, video lectures, and technical reading labs.
+- **Knowledge Checkpoints (Quizzes):** Persistent assessments with instant scoring; answers and passed checkpoints remain securely recorded without timeouts or state resets.
+- **Course Completion Tracking:** Progress tracks automatically to 100%, updating enrollment status upon completing all course materials.
+- **Joyful & Verifiable PDF Certificates:** Strict download gating (unlocked only upon 100% completion) generating professional, print-ready PDF certificates with royal gold and navy concentric borders, honor rosettes, and public verification links.
+- **Student Profile, Avatar & Settings:** Gallery and URL profile picture selector, dark/light theme switchers, and in-app password changes.
+- **Account Recovery:** Forgot password workflow sending secure temporary passwords via Nodemailer with forced permanent password reset upon login.
 
 ### For Instructors & Admins
-- **Instructor Portal (`/admin/dashboard`):** Overview of published courses and student enrollment counts.
-- **Course Creator (`/admin/courses/new`):** Rich form for course metadata, pricing, category classification, and initial syllabus.
+- **Instructor Portal (`/admin/dashboard`):** Overview of published courses, revenue metrics, and student enrollments.
+- **Course Creator (`/admin/courses/new`):** Wizard for course metadata, pricing, category classification, and initial syllabus.
 - **Curriculum & Syllabus Builder (`/admin/courses/[id]/edit`):** Drag-and-drop-style builder to create Modules, add Video/Article Lessons, and attach Multiple-Choice Quizzes.
 
 ---
@@ -87,7 +88,7 @@ KLZ Academy is engineered as a decoupled monorepo architecture:
 | Layer | Technologies |
 | :--- | :--- |
 | **Frontend** | [Next.js 14](https://nextjs.org/) (App Router), [React 18](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), [Lucide Icons](https://lucide.dev/), [React Hook Form](https://react-hook-form.com/), `react-player` |
-| **Backend** | [Node.js 20 LTS](https://nodejs.org/), [Express.js](https://expressjs.com/), [TypeScript](https://www.typescriptlang.org/), [JWT](https://jwt.io/), [Bcrypt.js](https://github.com/dcodeIO/bcrypt.js) |
+| **Backend** | [Node.js 20 LTS](https://nodejs.org/), [Express.js](https://expressjs.com/), [TypeScript](https://www.typescriptlang.org/), [JWT](https://jwt.io/), [Bcrypt.js](https://github.com/dcodeIO/bcrypt.js), [Nodemailer](https://nodemailer.com/) |
 | **Database** | [PostgreSQL 16](https://www.postgresql.org/), [Prisma ORM](https://www.prisma.io/) |
 | **Payments & Media** | [Stripe SDK](https://stripe.com/), [pdf-lib](https://pdf-lib.js.org/) |
 | **DevOps & Infra** | Ubuntu 24.04 LTS Server, Nginx, PM2, GitHub Actions (CI/CD) |
@@ -108,11 +109,11 @@ KDCourses/
 │   │   ├── config/
 │   │   │   └── db.ts             # Prisma client singleton
 │   │   ├── controllers/
-│   │   │   ├── authController.ts # Register & Login
-│   │   │   ├── certController.ts # Dynamic PDF certificate generator
-│   │   │   ├── classroomController.ts # Module, lesson & progress engine
+│   │   │   ├── authController.ts # Register, Login, Forgot & Change Password
+│   │   │   ├── certController.ts # Gated joyful PDF certificate generator
+│   │   │   ├── classroomController.ts # Module, lesson, completion & progress engine
 │   │   │   ├── courseController.ts # Catalog, course details, review engine
-│   │   │   ├── enrollController.ts # Student enrollment & dashboard
+│   │   │   ├── enrollController.ts # Student enrollment & dashboard sync
 │   │   │   ├── paymentController.ts# Stripe Checkout & Webhook handler
 │   │   │   └── quizController.ts   # Quiz submission & grading
 │   │   ├── middlewares/
@@ -128,7 +129,9 @@ KDCourses/
 │   │   │   ├── quizRoutes.ts
 │   │   │   └── userRoutes.ts
 │   │   ├── utils/
-│   │   │   └── auth.ts           # Token issuance & password hashing
+│   │   │   ├── auth.ts           # Token issuance & password hashing
+│   │   │   ├── email.ts          # Nodemailer SMTP transporter
+│   │   │   └── courseSeeder.ts   # Interactive onboarding course seeder
 │   │   ├── app.ts                # Express application bootstrapping
 │   │   └── server.ts             # Entry point (port listener)
 │   ├── package.json
@@ -138,24 +141,25 @@ KDCourses/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── (auth)/
-│   │   │   │   ├── login/page.tsx     # Student & Instructor sign-in
-│   │   │   │   └── register/page.tsx  # Account registration
+│   │   │   │   ├── login/page.tsx           # Sign-in with temp password handler
+│   │   │   │   ├── register/page.tsx        # Registration with confirm password
+│   │   │   │   └── forgot-password/page.tsx # Password recovery form
 │   │   │   ├── admin/
 │   │   │   │   ├── courses/
-│   │   │   │   │   ├── [id]/edit/page.tsx # Curriculum / Quiz builder
-│   │   │   │   │   └── new/page.tsx       # Course creation form
-│   │   │   │   ├── dashboard/page.tsx     # Instructor portal
-│   │   │   │   └── layout.tsx             # Admin sidebar layout
+│   │   │   │   │   ├── [id]/edit/page.tsx   # Curriculum / Quiz builder
+│   │   │   │   │   └── new/page.tsx         # Course creation form
+│   │   │   │   ├── dashboard/page.tsx       # Instructor portal
+│   │   │   │   └── layout.tsx               # Admin sidebar layout
 │   │   │   ├── courses/
 │   │   │   │   ├── [id]/
-│   │   │   │   │   ├── learn/page.tsx     # Interactive Classroom UI
-│   │   │   │   │   └── page.tsx           # Course Details, Stripe & Reviews
+│   │   │   │   │   ├── learn/page.tsx       # Interactive Classroom UI (100vh mobile)
+│   │   │   │   │   └── page.tsx             # Course Details & dynamic CTAs
 │   │   │   ├── dashboard/
-│   │   │   │   ├── profile/page.tsx       # Profile editor & Certificate list
-│   │   │   │   └── page.tsx               # Student learning dashboard
-│   │   │   ├── globals.css                # Tailwind base directives
-│   │   │   ├── layout.tsx                 # Global header & academic footer
-│   │   │   └── page.tsx                   # Main Catalog with search & filters
+│   │   │   │   ├── profile/page.tsx         # Avatar picker, theme, passwords & certs
+│   │   │   │   └── page.tsx                 # Student learning dashboard
+│   │   │   ├── globals.css                  # Tailwind base directives
+│   │   │   ├── layout.tsx                   # Global header, theme & avatar dropdown
+│   │   │   └── page.tsx                     # Main Catalog with search & filters
 │   │   └── lib/
 │   │       ├── api.ts            # Axios instance with auto-injected JWT
 │   │       └── utils.ts          # Tailwind class merger
@@ -164,7 +168,7 @@ KDCourses/
 │   └── tsconfig.json
 │
 ├── docs/                         # Architecture, Security, & Deployment guides
-├── GEMINI.md                     # Agentic CLI workspace context
+├── GEMINI.md                     # Agentic CLI workspace context & LLCs
 └── README.md                     # Main developer documentation
 ```
 
@@ -172,7 +176,6 @@ KDCourses/
 
 ## 🛠 Prerequisites
 
-Make sure you have installed on your local development machine:
 - **Node.js:** v20.x or higher
 - **npm:** v10.x or higher
 - **PostgreSQL:** v15 or v16
@@ -185,20 +188,13 @@ Make sure you have installed on your local development machine:
 ### 1. Database Setup
 Ensure PostgreSQL is running locally on port `5432`:
 ```bash
-# Example via psql
 psql -U postgres -c "CREATE DATABASE kdcourses_dev;"
 ```
 
 ### 2. Backend Setup
 ```bash
-# Navigate to the backend directory
 cd backend
-
-# Install dependencies
 npm install
-
-# Create local environment configuration
-# Copy the template below into backend/.env
 ```
 
 **`backend/.env`**:
@@ -210,35 +206,36 @@ JWT_SECRET="local_development_jwt_secret_key"
 STRIPE_SECRET_KEY="sk_test_mock_or_your_stripe_test_key"
 STRIPE_WEBHOOK_SECRET="whsec_mock"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+# Optional SMTP settings for transactional emails (defaults to terminal logging in dev)
+SMTP_HOST="smtp.resend.com"
+SMTP_PORT=587
+SMTP_USER="resend"
+SMTP_PASS="re_your_api_key"
+SMTP_FROM='"KLZ Academy Support" <support@yourdomain.com>'
 ```
 
 ```bash
-# Synchronize database schema and generate Prisma client
+# Push database schema & generate client
 npx prisma db push
 npx prisma generate
 
-# Start development server with hot-reloading
+# Start dev server
 npm run dev
 ```
-The backend API is now running at `http://localhost:5000`.
 
 ### 3. Frontend Setup
-Open a separate terminal window:
 ```bash
-# Navigate to the frontend directory
 cd frontend
-
-# Install dependencies
 npm install
 ```
 
-Create a **`frontend/.env.local`** file:
+**`frontend/.env.local`**:
 ```env
 NEXT_PUBLIC_API_URL="http://localhost:5000/api"
 ```
 
 ```bash
-# Start Next.js development server
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your web browser.
@@ -254,8 +251,13 @@ Open [http://localhost:3000](http://localhost:3000) in your web browser.
 | `DATABASE_URL` | `backend/.env` | PostgreSQL connection string with credentials |
 | `JWT_SECRET` | `backend/.env` | Secret string for signing authentication tokens |
 | `STRIPE_SECRET_KEY` | `backend/.env` | Stripe private API key (`sk_live_...` or `sk_test_...`) |
-| `STRIPE_WEBHOOK_SECRET` | `backend/.env` | Stripe signing secret for raw webhook verification |
+| `STRIPE_WEBHOOK_SECRET` | `backend/.env` | Stripe signing secret for webhook verification |
 | `NEXT_PUBLIC_APP_URL` | `backend/.env` | Base URL of frontend for Stripe redirects |
+| `SMTP_HOST` | `backend/.env` | SMTP host for email delivery (e.g. `smtp.resend.com`) |
+| `SMTP_PORT` | `backend/.env` | SMTP port (e.g. `587` or `465`) |
+| `SMTP_USER` | `backend/.env` | SMTP username |
+| `SMTP_PASS` | `backend/.env` | SMTP password / API token |
+| `SMTP_FROM` | `backend/.env` | Sender address (e.g. `"Support" <support@domain.com>`) |
 | `NEXT_PUBLIC_API_URL` | `frontend/.env.local` | Public API endpoint (e.g. `http://localhost:5000/api` or `http://84.235.239.86/api`) |
 
 ---
@@ -263,28 +265,16 @@ Open [http://localhost:3000](http://localhost:3000) in your web browser.
 ## 🗄 Database Schema & Prisma
 
 The schema handles the entire learning lifecycle:
-- **`User`**: Supports `Role` (`STUDENT`, `INSTRUCTOR`, `ADMIN`), biographies, and avatars.
+- **`User`**: Supports `Role` (`STUDENT`, `INSTRUCTOR`, `ADMIN`), avatars, bios, and `isTemporaryPassword` flag.
 - **`Course`**: Categorized course records linked to instructors.
-- **`Enrollment`**: Unique composite constraint on `[studentId, courseId]` preventing double-purchases.
-- **`Module`**: Sequential course sections (e.g., Week 1, Chapter 2).
-- **`Lesson`**: Video lectures (URLs) and article text readings.
+- **`Enrollment`**: Unique composite constraint on `[studentId, courseId]` with `ACTIVE` and `COMPLETED` statuses.
+- **`Module`**: Sequential course sections.
+- **`Lesson`**: Video lectures and article text readings.
 - **`LessonProgress`**: Tracks student completion status per lesson.
 - **`Quiz` & `Question` & `Option`**: Multiple-choice assessment engine.
 - **`QuizAttempt`**: Records student scores and passing grades.
-- **`Certificate`**: Records completed course achievements.
-- **`Review`**: 1-5 star ratings and written student feedback.
-
-### Helpful Prisma Commands:
-```bash
-# Push schema changes to database without migrations
-npx prisma db push
-
-# Regenerate Prisma Client TypeScript types
-npx prisma generate
-
-# Open Prisma Studio GUI
-npx prisma studio
-```
+- **`Certificate`**: Records verified course achievements.
+- **`Review`**: 1-5 star ratings and student feedback.
 
 ---
 
@@ -293,8 +283,10 @@ npx prisma studio
 ### Authentication (`/api/auth`)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Create student or instructor account | Public |
-| `POST` | `/api/auth/login` | Sign in and receive JWT token | Public |
+| `POST` | `/api/auth/register` | Create account (validates name, email, password) | Public |
+| `POST` | `/api/auth/login` | Sign in and receive JWT token + temp password flag | Public |
+| `POST` | `/api/auth/forgot-password` | Issue and dispatch temporary password via email | Public |
+| `POST` | `/api/auth/change-password` | Update account password | Authenticated |
 
 ### Courses & Catalog (`/api/courses`)
 | Method | Endpoint | Description | Auth |
@@ -310,25 +302,13 @@ npx prisma studio
 | `GET` | `/api/classroom/:courseId` | Fetch modules, lessons & personalized student progress | Enrolled Student |
 | `POST` | `/api/classroom/:courseId/modules` | Add module to course | Instructor |
 | `POST` | `/api/classroom/modules/:moduleId/lessons` | Add video/text lesson or quiz | Instructor |
-| `POST` | `/api/classroom/lessons/:lessonId/progress` | Mark lesson as completed | Enrolled Student |
+| `POST` | `/api/classroom/lessons/:lessonId/progress` | Mark lesson complete & auto-completes enrollment | Enrolled Student |
 
-### Quizzes (`/api/quizzes`)
+### Certificates (`/api/certificates`)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/quizzes/:quizId/submit` | Evaluate student answers & save attempt | Enrolled Student |
-
-### Payments (`/api/checkout`)
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/checkout/create-checkout-session` | Generate Stripe Checkout URL | Authenticated |
-| `POST` | `/api/checkout/webhook` | Listen for Stripe `checkout.session.completed` | Stripe Signature |
-
-### Certificates & User (`/api/certificates` & `/api/users`)
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/certificates/:courseId` | Generate dynamic completion PDF (Base64 URI) | Enrolled Student |
-| `GET` | `/api/users` | Fetch current user profile | Authenticated |
-| `PUT` | `/api/users` | Update bio, avatar, and full name | Authenticated |
+| `GET` | `/api/certificates/:courseId` | Generate 100% gated dynamic PDF certificate | Enrolled Student |
+| `GET` | `/api/certificates/verify/:certId` | Verify authenticity of minted certificate | Public |
 
 ---
 
@@ -341,24 +321,36 @@ KLZ Academy includes a fully automated **GitHub Actions** deployment pipeline (`
 2. The runner connects to the production Ubuntu server via SSH using secrets configured in GitHub.
 3. It performs a zero-downtime update:
    - Fetches and hard-resets to the latest commit.
-   - Updates backend packages, generates Prisma Client, and pushes database schema updates.
+   - Updates backend packages, generates Prisma Client, and runs `prisma db push`.
    - Compiles TypeScript and builds the Next.js production bundle.
-   - Re-daemonizes PM2 processes (`kdcourses-api` and `kdcourses-web`).
+   - Restarts PM2 processes (`kdcourses-api` and `kdcourses-web`).
    - Reloads Nginx.
 
-### Required GitHub Secrets:
-Set these in your repository under **Settings → Secrets and variables → Actions**:
-- `SERVER_IP`: Production server public IP.
-- `SERVER_USERNAME`: Target user (e.g. `ubuntu`).
-- `SSH_PRIVATE_KEY`: Raw OpenSSH private key with permissions to log into the server.
+---
 
-For manual server provisioning instructions, see [docs/Phase5_Ubuntu_Deployment.md](docs/Phase5_Ubuntu_Deployment.md).
+## 🛠 Operational Lessons Learned & CLI Tips (LLCs)
+
+1. **PowerShell vs Bash Command Chaining:**
+   - In Windows PowerShell 5.1, `&&` causes syntax errors. Always use `;` between commands:
+     `npm install; npm run build`
+2. **Quoting Paths with Parentheses/Brackets:**
+   - Always wrap file paths containing `(auth)` or `[id]` in single quotes when passing to `git` or CLI tools:
+     `git add 'frontend/src/app/(auth)/login/page.tsx'`
+3. **Git Push in Headless / Non-Interactive CLIs:**
+   - If Git fails with `terminal prompts disabled` due to cleared credential helpers, specify the Windows Credential Manager:
+     `git -c credential.helper=wincred push origin main`
+4. **Prisma Client Generation without Database:**
+   - To update TypeScript definitions locally without running PostgreSQL, run `npx prisma generate` instead of `prisma db push`.
+5. **Nodemailer / SMTP Best Practices:**
+   - Avoid self-hosted Postfix servers due to strict email spam filtering (missing PTR/DKIM). Use transactional services like Resend or SendGrid via standard SMTP environment variables.
+6. **Next.js JSX Conditional Syntax:**
+   - Avoid deeply nested ternaries inside JSX templates. Use explicit boolean guards (`{condition && <Component />}`) to guarantee clean compilation with SWC.
 
 ---
 
 ## 🤝 Contributing & Code Standards
 
-- **TypeScript Strictness:** Never use `any` unless required for third-party SDK compatibility.
-- **Component Styling:** Use utility-first Tailwind CSS following the KLZ Academy palette (`brand-600`, `slate-950`).
-- **No Placeholders:** Code must always be fully functional without `// ... rest of code` placeholders.
-- **Automated Validation:** Always ensure `npm run build` succeeds in both `backend` and `frontend` before pushing to `main`.
+- **TypeScript Strictness:** Strict typing across all endpoints and components.
+- **Component Styling:** Utility-first Tailwind CSS following the KLZ Academy palette (`brand-600`, `slate-950`).
+- **No Placeholders:** Code must always be production-ready without lazy placeholders.
+- **Build Verification:** Ensure `npm run build` succeeds in both `backend` and `frontend` before pushing to `main`.
