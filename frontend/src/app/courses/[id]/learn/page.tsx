@@ -9,6 +9,7 @@ import {
   HelpCircle, ChevronLeft, ChevronRight, X, Award, Check
 } from "lucide-react";
 import dynamic from 'next/dynamic';
+import InteractiveLessonPlayer from "./InteractiveLessonPlayer";
 
 // Dynamically import react-player to avoid hydration errors with Next.js SSR
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false }) as any;
@@ -420,10 +421,13 @@ export default function StudentClassroomPage() {
                     />
                   </div>
                 ) : (
-                  /* TEXT / READING LAB */
-                  <div className="prose max-w-none text-slate-800 dark:text-slate-200 bg-slate-50/70 dark:bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm whitespace-pre-line leading-relaxed font-normal">
-                    {activeLesson.content}
-                  </div>
+                  /* TEXT / READING LAB WITH INTERACTIVE SLIDE PLAYER & AI VOICE */
+                  <InteractiveLessonPlayer
+                    lessonTitle={activeLesson.title}
+                    content={activeLesson.content}
+                    onCompleteLesson={markComplete}
+                    isCompleted={activeIsDone}
+                  />
                 )}
               </div>
 
