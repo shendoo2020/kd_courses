@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
-  Calendar, Clock, MapPin, Users, Video, Sparkles, 
-  ArrowRight, CheckCircle2, AlertCircle, X, Search, Filter 
+  Calendar, Clock, Video, Sparkles, 
+  ArrowRight, ArrowLeft, CheckCircle2, X 
 } from "lucide-react";
-import { eventsApi, PlatformEvent, TargetAudience, EventType } from "@/lib/api";
+import { eventsApi, PlatformEvent } from "@/lib/api";
+import { useLanguage } from "@/lib/LanguageContext";
 
 const SAMPLE_EVENTS: PlatformEvent[] = [
   {
@@ -75,6 +76,8 @@ const SAMPLE_EVENTS: PlatformEvent[] = [
 ];
 
 export default function EventsCalendarPage() {
+  const { language, isRTL, t } = useLanguage();
+
   const [events, setEvents] = useState<PlatformEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAudience, setSelectedAudience] = useState<string>("ALL");
@@ -124,16 +127,20 @@ export default function EventsCalendarPage() {
         organization: regForm.organization || undefined,
       });
       setRegStatus("success");
-      setRegMessage(`Your seat for "${activeEvent.title}" has been reserved. A calendar invite has been sent to ${regForm.email}.`);
+      setRegMessage(
+        language === "ar"
+          ? `تم تأكيد حجز مقعدك لندوة "${activeEvent.title}". تم إرسال رابط الجلسة المباشر إلى ${regForm.email}.`
+          : `Your seat for "${activeEvent.title}" has been reserved. A calendar invite has been sent to ${regForm.email}.`
+      );
     } catch (err: any) {
       setRegStatus("error");
-      setRegMessage(err.response?.data?.message || "Registration failed. You may already be registered or this event is full.");
+      setRegMessage(err.response?.data?.message || (language === "ar" ? "تعذر تأكيد التسجيل. قد تكون مسجلاً بالفعل أو اكتمل عدد المقاعد." : "Registration failed. You may already be registered or this event is full."));
     }
   };
 
   const formatEventDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", {
+    return d.toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
@@ -144,9 +151,9 @@ export default function EventsCalendarPage() {
   const formatEventTime = (startStr: string, endStr: string) => {
     const s = new Date(startStr);
     const e = new Date(endStr);
-    const startTime = s.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-    const endTime = e.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-    return `${startTime} – ${endTime} EST`;
+    const startTime = s.toLocaleTimeString(language === "ar" ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit" });
+    const endTime = e.toLocaleTimeString(language === "ar" ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit" });
+    return `${startTime} – ${endTime}`;
   };
 
   return (
@@ -155,9 +162,9 @@ export default function EventsCalendarPage() {
         
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-8">
-          <Link href="/" className="hover:text-brand-600 transition-colors">Catalog</Link>
+          <Link href="/" className="hover:text-brand-600 transition-colors">{t.nav.catalog}</Link>
           <span>/</span>
-          <span className="text-slate-900 dark:text-slate-100 font-semibold">Seminars & Academic Events</span>
+          <span className="text-slate-900 dark:text-slate-100 font-semibold">{t.events.title}</span>
         </nav>
 
         {/* Hero Section */}
@@ -165,21 +172,21 @@ export default function EventsCalendarPage() {
           <div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-400 border border-brand-200 dark:border-brand-800 mb-3">
               <Sparkles size={14} className="text-brand-500" />
-              Community & Mentor Engagement
+              {t.events.badge}
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Academic Seminars & Keynotes
+              {t.events.title}
             </h1>
             <p className="mt-3 text-base text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-              Connect with frontier industry leaders, university faculty, and fellow scholars through live virtual keynotes, architecture deep-dives, and career AMAs.
+              {t.events.desc}
             </p>
           </div>
 
           <Link
             href="/custom-courses"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-brand-500 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-brand-500 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-all shadow-sm shrink-0"
           >
-            Request Private Institutional Seminar <ArrowRight size={16} />
+            {t.events.requestPrivate} {isRTL ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
           </Link>
         </div>
 
@@ -189,14 +196,14 @@ export default function EventsCalendarPage() {
             
             {/* Target Audience Pills */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mr-2">
-                Audience:
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mx-2">
+                {t.events.audience}:
               </span>
               {[
-                { id: "ALL", label: "All Tiers" },
-                { id: "K12", label: "K-12 Youth STEM" },
-                { id: "HIGHER_ED", label: "Universities & Colleges" },
-                { id: "PROFESSIONAL", label: "Professional & Enterprise" },
+                { id: "ALL", label: t.catalog.allTiers },
+                { id: "K12", label: t.catalog.k12 },
+                { id: "HIGHER_ED", label: t.catalog.higherEd },
+                { id: "PROFESSIONAL", label: t.catalog.professional },
               ].map((tier) => (
                 <button
                   key={tier.id}
@@ -212,28 +219,28 @@ export default function EventsCalendarPage() {
               ))}
             </div>
 
-            {/* Event Type Filter */}
+            {/* Event Format Filter */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mr-2">
-                Format:
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mx-2">
+                {t.events.format}:
               </span>
               {[
-                { id: "ALL", label: "All Formats" },
-                { id: "SEMINAR", label: "Seminar" },
-                { id: "WORKSHOP", label: "Workshop" },
-                { id: "CAREER_PANEL", label: "Career Panel" },
-                { id: "MENTOR_TALK", label: "Mentor AMA" },
-              ].map((t) => (
+                { id: "ALL", label: t.events.allFormats },
+                { id: "SEMINAR", label: language === "ar" ? "ندوة علمية" : "Seminar" },
+                { id: "WORKSHOP", label: language === "ar" ? "ورشة عمل" : "Workshop" },
+                { id: "CAREER_PANEL", label: language === "ar" ? "جلسة توجيه مهني" : "Career Panel" },
+                { id: "MENTOR_TALK", label: language === "ar" ? "لقاء مفتوح مع خبير" : "Mentor AMA" },
+              ].map((item) => (
                 <button
-                  key={t.id}
-                  onClick={() => setSelectedType(t.id)}
+                  key={item.id}
+                  onClick={() => setSelectedType(item.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                    selectedType === t.id
+                    selectedType === item.id
                       ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold"
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
-                  {t.label}
+                  {item.label}
                 </button>
               ))}
             </div>
@@ -257,7 +264,7 @@ export default function EventsCalendarPage() {
                     className="w-full h-full object-cover opacity-60"
                   />
                 )}
-                <div className="absolute top-4 left-4 flex gap-2">
+                <div className="absolute top-4 left-4 rtl:left-auto rtl:right-4 flex gap-2">
                   <span className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 backdrop-blur-sm">
                     {event.eventType.replace('_', ' ')}
                   </span>
@@ -269,7 +276,7 @@ export default function EventsCalendarPage() {
                 <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white text-xs font-medium">
                   <div className="flex items-center gap-1.5 bg-black/50 px-2.5 py-1 rounded-lg backdrop-blur-sm">
                     <Video size={13} className="text-emerald-400" />
-                    <span>{event.isVirtual ? "Virtual Event (Zoom)" : "In-Person"}</span>
+                    <span>{event.isVirtual ? t.events.virtual : t.events.inPerson}</span>
                   </div>
                   
                   <div className={`px-2.5 py-1 rounded-lg font-bold backdrop-blur-sm ${
@@ -279,7 +286,7 @@ export default function EventsCalendarPage() {
                       ? "bg-amber-500/80 text-white" 
                       : "bg-emerald-500/80 text-white"
                   }`}>
-                    {event.isSoldOut ? "Fully Booked" : `${event.seatsRemaining} Seats Left`}
+                    {event.isSoldOut ? t.events.soldOut : `${event.seatsRemaining} ${t.events.seatsLeft}`}
                   </div>
                 </div>
               </div>
@@ -342,8 +349,8 @@ export default function EventsCalendarPage() {
                       : "bg-brand-600 hover:bg-brand-700 text-white shadow-sm hover:shadow"
                   }`}
                 >
-                  {event.isSoldOut ? "Registration Closed" : "Reserve Complimentary Seat"}
-                  {!event.isSoldOut && <ArrowRight size={14} />}
+                  {event.isSoldOut ? t.events.soldOut : t.events.reserveSeat}
+                  {!event.isSoldOut && (isRTL ? <ArrowLeft size={14} /> : <ArrowRight size={14} />)}
                 </button>
               </div>
             </div>
@@ -357,20 +364,20 @@ export default function EventsCalendarPage() {
               
               <button
                 onClick={() => setActiveEvent(null)}
-                className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="absolute top-5 right-5 rtl:right-auto rtl:left-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <X size={20} />
               </button>
 
               <div className="mb-6">
                 <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 mb-2">
-                  Complimentary Registration
+                  {t.events.modalTitle}
                 </span>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
                   {activeEvent.title}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                  Speaker: <strong className="text-slate-700 dark:text-slate-300">{activeEvent.speakerName}</strong> • {formatEventDate(activeEvent.startTime)}
+                  {language === "ar" ? "المتحدث:" : "Speaker:"} <strong className="text-slate-700 dark:text-slate-300">{activeEvent.speakerName}</strong> • {formatEventDate(activeEvent.startTime)}
                 </p>
               </div>
 
@@ -379,13 +386,13 @@ export default function EventsCalendarPage() {
                   <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle2 size={32} />
                   </div>
-                  <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Registration Confirmed!</h4>
+                  <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">{t.events.rsvpSuccess}</h4>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">{regMessage}</p>
                   <button
                     onClick={() => setActiveEvent(null)}
                     className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-sm"
                   >
-                    Close Window
+                    {language === "ar" ? "إغلاق النافذة" : "Close Window"}
                   </button>
                 </div>
               ) : (
@@ -398,7 +405,7 @@ export default function EventsCalendarPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Full Name *
+                      {t.customCourses.fullName} *
                     </label>
                     <input
                       type="text"
@@ -412,7 +419,7 @@ export default function EventsCalendarPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Email Address *
+                      {t.customCourses.email} *
                     </label>
                     <input
                       type="email"
@@ -426,7 +433,7 @@ export default function EventsCalendarPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      School / University / Company
+                      {t.customCourses.organization}
                     </label>
                     <input
                       type="text"
@@ -438,7 +445,7 @@ export default function EventsCalendarPage() {
                   </div>
 
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-2">
-                    A direct joining link and `.ics` calendar invitation will be dispatched immediately.
+                    {t.events.modalDesc}
                   </p>
 
                   <div className="pt-2">
@@ -447,7 +454,7 @@ export default function EventsCalendarPage() {
                       disabled={regStatus === "submitting"}
                       className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition-all shadow-md disabled:opacity-50"
                     >
-                      {regStatus === "submitting" ? "Reserving Seat..." : "Confirm Free Registration"}
+                      {regStatus === "submitting" ? "..." : t.events.confirmRsvp}
                     </button>
                   </div>
                 </form>

@@ -2,47 +2,50 @@
 
 import Link from "next/link";
 import { 
-  ShieldCheck, Award, GraduationCap, Building2, Globe, 
-  Users, CheckCircle2, ArrowRight, BookOpen, Sparkles, HeartHandshake, FileCheck 
+  Award, GraduationCap, ArrowRight, ArrowLeft, 
+  Sparkles, HeartHandshake, FileCheck 
 } from "lucide-react";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function AboutUsPage() {
+  const { language, isRTL, t } = useLanguage();
+
   const leadership = [
     {
       name: "Dr. Alistair Sterling",
-      role: "Dean of Curriculum & AI Faculty",
+      role: language === "ar" ? "عميد المناهج وهيئة الذكاء الاصطناعي" : "Dean of Curriculum & AI Faculty",
       credentials: "Ph.D. in Computer Science (Stanford), Former Principal Scientist at Google Brain",
-      bio: "20+ years researching neural architectures, automated code generation, and high-performance computing curricula.",
+      bio: language === "ar" ? "أكثر من 20 عاماً في أبحاث الشبكات العصبية، والتوليد الآلي للشيفرات البرمجية، والمناهج المتقدمة." : "20+ years researching neural architectures, automated code generation, and high-performance computing curricula.",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
     },
     {
       name: "Elena Rostova, M.Sc.",
-      role: "Director of Enterprise Cohorts & Labs",
+      role: language === "ar" ? "مديرة برامج الشركات والمختبرات السحابية" : "Director of Enterprise Cohorts & Labs",
       credentials: "M.S. in Software Systems (ETH Zürich), Ex-Director of Cloud Infrastructure at AWS",
-      bio: "Oversees hands-on lab environments, automated grading test runners, and multi-cloud container sandboxes.",
+      bio: language === "ar" ? "تشرف على بيئات التدريب التفاعلية، ومحركات التصحيح الآلي، وحاويات السحابة المتعددة." : "Oversees hands-on lab environments, automated grading test runners, and multi-cloud container sandboxes.",
       avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
     },
     {
       name: "Marcus Vance",
-      role: "Head of Youth STEM & K-12 Outreach",
+      role: language === "ar" ? "رئيس مسارات الناشئة وSTEM للشباب" : "Head of Youth STEM & K-12 Outreach",
       credentials: "M.Ed. in Instructional Design (Harvard), Chair of National Computer Science Teachers Association",
-      bio: "Dedicated to designing intuitive visual programming and algorithmic problem-solving for secondary education.",
+      bio: language === "ar" ? "مكرس لتصميم مناهج التفكير الخوارزمي التفاعلي والبرمجة البصرية لطلاب المراحل الثانوية." : "Dedicated to designing intuitive visual programming and algorithmic problem-solving for secondary education.",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
     },
     {
       name: "Prof. Priya Nair",
-      role: "Academic Review Board Chair",
+      role: language === "ar" ? "رئيسة لجنة المراجعة الأكاديمية" : "Academic Review Board Chair",
       credentials: "Professor of Distributed Systems, Carnegie Mellon University Alum",
-      bio: "Ensures every KLZ Academy syllabus adheres to rigorous peer-reviewed university standards and ethical computing guidelines.",
+      bio: language === "ar" ? "تضمن توافق كافة مناهج المنصة مع أعلى المعايير المعتمدة عالمياً في كبرى الجامعات." : "Ensures every KLZ Academy syllabus adheres to rigorous peer-reviewed university standards and ethical computing guidelines.",
       avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80",
     },
   ];
 
   const milestones = [
-    { metric: "50,000+", label: "Graduated Students Worldwide" },
-    { metric: "99.4%", label: "Certificate Authenticity Verification Rate" },
-    { metric: "120+", label: "University & Corporate Cohort Partners" },
-    { metric: "4.9 / 5.0", label: "Average Student Rating Across 2,400+ Reviews" },
+    { metric: "50,000+", label: language === "ar" ? "طالب وطالبة تخرجوا عالمياً" : "Graduated Students Worldwide" },
+    { metric: "99.4%", label: language === "ar" ? "نسبة التحقق من صحة الشهادات" : "Certificate Authenticity Verification Rate" },
+    { metric: "120+", label: language === "ar" ? "شريك أكاديمي ومؤسسي" : "University & Corporate Cohort Partners" },
+    { metric: "4.9 / 5.0", label: language === "ar" ? "متوسط تقييم الطلاب عبر 2,400+ تقييم" : "Average Student Rating Across 2,400+ Reviews" },
   ];
 
   return (
@@ -51,22 +54,22 @@ export default function AboutUsPage() {
         
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-          <Link href="/" className="hover:text-brand-600 transition-colors">Catalog</Link>
+          <Link href="/" className="hover:text-brand-600 transition-colors">{t.nav.catalog}</Link>
           <span>/</span>
-          <span className="text-slate-900 dark:text-slate-100 font-semibold">About Us & Academic Credentials</span>
+          <span className="text-slate-900 dark:text-slate-100 font-semibold">{t.nav.about}</span>
         </nav>
 
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-400 border border-brand-200 dark:border-brand-800 mb-4">
             <Sparkles size={14} className="text-brand-500" />
-            Institutional Rigor Meets Industry Application
+            {t.about.badge}
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
-            Architecting the Future of Technical Education
+            {t.about.title}
           </h1>
           <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-            KLZ Academy was founded to bridge the gulf between abstract academic theory and modern cloud-native engineering. We build deep, checkpoint-driven curricula for schools, universities, and leading tech companies.
+            {t.about.desc}
           </p>
         </div>
 
@@ -86,9 +89,14 @@ export default function AboutUsPage() {
             <div className="w-12 h-12 rounded-2xl bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center mb-6">
               <GraduationCap size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Academic Pedagogy</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+              {language === "ar" ? "المنهجية الأكاديمية" : "Academic Pedagogy"}
+            </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              Every course is built around mastery learning: conceptual lectures followed by rigorous coding checkpoints, peer discussion, and comprehensive proctored assessments.
+              {language === "ar" 
+                ? "يعتمد كل مسار على الإتقان التراكمي: محاضرات نظرية مكثفة تعقبها محطات برمجية إلزامية، واختبارات مؤتمتة وتقييم مستمر."
+                : "Every course is built around mastery learning: conceptual lectures followed by rigorous coding checkpoints, peer discussion, and comprehensive proctored assessments."
+              }
             </p>
           </div>
 
@@ -96,9 +104,14 @@ export default function AboutUsPage() {
             <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-6">
               <FileCheck size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Cryptographic Verification</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+              {language === "ar" ? "التحقق الرقمي الموثق" : "Cryptographic Verification"}
+            </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              All credentials are cryptographically stamped with immutable verification UUIDs accessible at <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">/verify/:certId</code> and directly shareable to LinkedIn.
+              {language === "ar"
+                ? "تحتوي كافة شهادات التخرج على رمز تحقق فريد غير قابل للتزوير يمكن للشركات وأرباب العمل التحقق منه بضغطة زر واحدة."
+                : "All credentials are cryptographically stamped with immutable verification UUIDs accessible at /verify/:certId and directly shareable to LinkedIn."
+              }
             </p>
           </div>
 
@@ -106,9 +119,14 @@ export default function AboutUsPage() {
             <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6">
               <HeartHandshake size={24} />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Multi-Tier Delivery</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+              {language === "ar" ? "تعدد الفئات والمسارات" : "Multi-Tier Delivery"}
+            </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              From K-12 STEM youth clubs to university capstones and enterprise private cloud cohorts, our platforms adapt smoothly to the learner’s developmental tier.
+              {language === "ar"
+                ? "من أندية البرمجة للناشئة، مروراً بالأقسام الجامعية، وحتى الكوادر الهندسية المتقدمة، تلبي منصتنا احتياجات مختلف المستويات بسلاسة."
+                : "From K-12 STEM youth clubs to university capstones and enterprise private cloud cohorts, our platforms adapt smoothly to the learner’s developmental tier."
+              }
             </p>
           </div>
         </div>
@@ -117,10 +135,10 @@ export default function AboutUsPage() {
         <div>
           <div className="text-center max-w-2xl mx-auto mb-10">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-              Academic Review Board & Faculty
+              {t.about.facultyBoard}
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-              Our curricula are engineered and peer-reviewed by leaders across top research labs and universities.
+              {t.about.facultyBoardDesc}
             </p>
           </div>
 
@@ -146,9 +164,9 @@ export default function AboutUsPage() {
         {/* Call to Actions */}
         <div className="bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-8 sm:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
-            <h3 className="text-2xl font-bold mb-2">Partner with KLZ Academy</h3>
+            <h3 className="text-2xl font-bold mb-2">{t.about.partnerTitle}</h3>
             <p className="text-brand-200 text-sm max-w-xl leading-relaxed">
-              Looking to join as a faculty instructor or request a custom curriculum package for your university department or engineering team?
+              {t.about.partnerDesc}
             </p>
           </div>
           <div className="flex flex-wrap gap-4 shrink-0">
@@ -156,13 +174,13 @@ export default function AboutUsPage() {
               href="/teach"
               className="px-6 py-3 rounded-xl bg-white text-slate-900 font-bold text-sm hover:bg-slate-100 transition-colors shadow-md"
             >
-              Apply as Instructor
+              {t.nav.teach}
             </Link>
             <Link
               href="/custom-courses"
               className="px-6 py-3 rounded-xl bg-brand-600 text-white font-bold text-sm hover:bg-brand-700 transition-colors shadow-md inline-flex items-center gap-2"
             >
-              Request Custom Cohort <ArrowRight size={16} />
+              {t.catalog.requestCustom} {isRTL ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
             </Link>
           </div>
         </div>

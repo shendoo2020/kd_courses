@@ -6,13 +6,15 @@ import { api, deliveryApi, PrintItemType } from "@/lib/api";
 import Link from "next/link";
 import { 
   CheckCircle2, Clock, Shield, Star, User, MessageSquare, 
-  Calendar, BookOpen, Truck, XCircle, GraduationCap, Laptop, 
-  Award, Globe, Linkedin, Github, ExternalLink, X, PackageCheck
+  Calendar, BookOpen, Truck, XCircle, Laptop, 
+  Award, Globe, Linkedin, Github, X, PackageCheck
 } from "lucide-react";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function CourseDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { language, isRTL, t } = useLanguage();
   
   const [course, setCourse] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,11 +96,17 @@ export default function CourseDetailsPage() {
       // If free ($0), enroll directly
       await api.post("/enrollments", { courseId: id });
       setIsUserEnrolled(true);
-      setEnrollMessage({ type: 'success', text: "Successfully enrolled in course!" });
+      setEnrollMessage({ 
+        type: 'success', 
+        text: language === "ar" ? "تم التسجيل في الدورة بنجاح!" : "Successfully enrolled in course!" 
+      });
       setTimeout(() => router.push(`/courses/${id}/learn`), 1200);
     } catch (err: any) {
       if (err.response?.status === 401) {
-        setEnrollMessage({ type: 'error', text: "Please log in to enroll." });
+        setEnrollMessage({ 
+          type: 'error', 
+          text: language === "ar" ? "يرجى تسجيل الدخول أولاً للتسجيل." : "Please log in to enroll." 
+        });
         setTimeout(() => router.push("/login"), 1500);
       } else {
         setEnrollMessage({ type: 'error', text: err.response?.data?.message || "Failed to enroll." });
@@ -129,7 +137,7 @@ export default function CourseDetailsPage() {
     e.preventDefault();
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please log in to order home delivery materials.");
+      alert(language === "ar" ? "يرجى تسجيل الدخول لطلب مذكرات الدورة المطبوعة." : "Please log in to order home delivery materials.");
       router.push("/login");
       return;
     }
@@ -141,17 +149,27 @@ export default function CourseDetailsPage() {
         ...printForm,
       });
       setPrintOrderStatus("success");
-      setPrintOrderMessage(`Order #${res.data.order.id.slice(0, 8)} confirmed! Track in your dashboard.`);
+      setPrintOrderMessage(
+        language === "ar"
+          ? `تم تأكيد الطلب #${res.data.order.id.slice(0, 8)} بنجاح! يمكنك متابعة الشحن من لوحة التحكم.`
+          : `Order #${res.data.order.id.slice(0, 8)} confirmed! Track in your dashboard.`
+      );
     } catch (err: any) {
       setPrintOrderStatus("error");
       setPrintOrderMessage(err.response?.data?.message || "Failed to place print order.");
     }
   };
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Loading curriculum...</div>;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center font-bold text-slate-500">{language === "ar" ? "جارٍ تحميل تفاصيل المنهج..." : "Loading curriculum..."}</div>;
   if (error || !course) return <div className="min-h-screen flex items-center justify-center text-red-600 font-bold">{error}</div>;
 
-  const defaultInclusions = [
+  const defaultInclusions = language === "ar" ? [
+    "وصول كامل إلى المحاضرات المصورة والمختبرات البرمجية التفاعلية",
+    "اختبارات تقييمية مؤتمتة عند نهاية كل وحدة دراسية مع نتائج فورية",
+    "شهادة تخرج معتمدة رقمياً برقم تحقق تسلسلي غير قابل للتزييف",
+    "منتدى أكاديمي مخصص للنقاش والتواصل المباشر مع المحاضر",
+    "وصول دائم ومفتوح مدى الحياة إلى تحديثات المنهج والمستودعات البرمجية",
+  ] : [
     "Full access to interactive video lessons and code editor checkpoints",
     "Automated proctored module quizzes with immediate feedback",
     "Verifiable digital completion certificate with unique UUID",
@@ -159,13 +177,21 @@ export default function CourseDetailsPage() {
     "Lifetime archive access to lecture updates and lab repos",
   ];
 
-  const defaultExclusions = [
+  const defaultExclusions = language === "ar" ? [
+    "أرصدة المنصات السحابية الخارجية لحوسبة الذكاء الاصطناعي (GPU/Cluster credits)",
+    "قسائم الاختبارات المهنية المعتمدة من جهات تجارية طرف ثالث",
+    "الأجهزة الإلكترونية الملموسة أو الشرائح الدقيقة المادية",
+  ] : [
     "Third-party external cloud provider GPU/cluster compute credits",
     "Third-party vendor proprietary certification exam vouchers",
     "Physical hardware devices, specialized development boards, or sensors",
   ];
 
-  const defaultPrerequisites = [
+  const defaultPrerequisites = language === "ar" ? [
+    "إلمام بأساسيات البرمجة بأي لغة كائنية (Python أو JavaScript أو ما يعادلهما)",
+    "متصفح ويب حديث يدعم تقنيات WebAssembly وHTML5",
+    "جهاز حاسوب بذاكرة عشوائية 8GB على الأقل للتطبيق العملي السلس",
+  ] : [
     "Basic proficiency in Python / JavaScript or equivalent object-oriented syntax",
     "Modern web browser (Chrome, Firefox, or Safari) with WebAssembly support",
     "Minimum 8GB RAM recommended for local terminal lab exercises",
@@ -189,10 +215,10 @@ export default function CourseDetailsPage() {
                 {course.category || "Development"}
               </span>
               <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-md text-xs font-bold uppercase tracking-wide">
-                Target: {course.targetAudience || "PROFESSIONAL"}
+                {language === "ar" ? "الفئة:" : "Target:"} {course.targetAudience || "PROFESSIONAL"}
               </span>
               <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-md text-xs font-bold uppercase tracking-wide">
-                Format: {course.deliveryMode ? course.deliveryMode.replace('_', ' ') : "SELF PACED"}
+                {language === "ar" ? "النمط:" : "Format:"} {course.deliveryMode ? course.deliveryMode.replace('_', ' ') : "SELF PACED"}
               </span>
             </div>
 
@@ -208,16 +234,16 @@ export default function CourseDetailsPage() {
             <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm text-slate-400 pt-2">
               <div className="flex items-center gap-2">
                 <User size={16} className="text-brand-400" />
-                <span>Instructor: <strong className="text-white">{course.instructor?.name || "KLZ Faculty"}</strong></span>
+                <span>{t.courseDetails.instructor}: <strong className="text-white">{course.instructor?.name || (language === "ar" ? "هيئة التدريس" : "KLZ Faculty")}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock size={16} className="text-brand-400" />
-                <span>Duration: <strong className="text-white">{course.durationWeeks || 8} Weeks</strong> (~{course.hoursPerWeek || 5} hrs/wk)</span>
+                <span>{t.courseDetails.duration}: <strong className="text-white">{course.durationWeeks || 8} {t.catalog.weeks}</strong> (~{course.hoursPerWeek || 5} {t.catalog.hrsPerWeek})</span>
               </div>
               {course.scheduleDetails && (
                 <div className="flex items-center gap-2">
                   <Calendar size={16} className="text-brand-400" />
-                  <span>Schedule: <strong className="text-white">{course.scheduleDetails}</strong></span>
+                  <span>{t.courseDetails.schedule}: <strong className="text-white">{course.scheduleDetails}</strong></span>
                 </div>
               )}
             </div>
@@ -229,10 +255,10 @@ export default function CourseDetailsPage() {
               
               <div className="flex items-baseline justify-between mb-4">
                 <div className="text-3xl font-black text-slate-950 dark:text-white">
-                  {course.price === 0 ? "Free" : `$${course.price.toFixed(2)}`}
+                  {course.price === 0 ? t.courseDetails.free : `$${course.price.toFixed(2)}`}
                 </div>
                 <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                  Full Lifetime Access
+                  {t.courseDetails.lifetimeAccess}
                 </span>
               </div>
               
@@ -253,10 +279,10 @@ export default function CourseDetailsPage() {
                     className="btn-primary flex-1 text-center text-sm sm:text-base font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
                   >
                     {userEnrollment?.status === "COMPLETED" || (userEnrollment?.progressPercentage ?? 0) === 100
-                      ? "Review Course →"
+                      ? t.courseDetails.reviewCourse
                       : (userEnrollment?.progressPercentage ?? 0) > 0
-                      ? "Continue Learning →"
-                      : "Start Now →"}
+                      ? t.courseDetails.continueLearning
+                      : t.courseDetails.startNow}
                   </Link>
                 ) : (
                   <button 
@@ -264,7 +290,7 @@ export default function CourseDetailsPage() {
                     disabled={isEnrolling || enrollMessage?.type === 'success'}
                     className="btn-primary flex-1 text-sm sm:text-base font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
                   >
-                    {isEnrolling ? "Processing..." : course.price > 0 ? "Enroll with Stripe Checkout" : "Enroll for Free"}
+                    {isEnrolling ? "..." : course.price > 0 ? t.courseDetails.enrollPaid : t.courseDetails.enrollFree}
                   </button>
                 )}
                 
@@ -272,9 +298,9 @@ export default function CourseDetailsPage() {
                   onClick={async () => {
                     try {
                       await api.post(`/users/wishlist/${id}`);
-                      alert("Added to your wishlist!");
+                      alert(language === "ar" ? "تمت إضافة الدورة إلى قائمة رغباتك!" : "Added to your wishlist!");
                     } catch (e) {
-                      alert("Please log in to save to wishlist.");
+                      alert(language === "ar" ? "يرجى تسجيل الدخول للحفظ في المفضلة." : "Please log in to save to wishlist.");
                     }
                   }}
                   className="px-4 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300 hover:text-red-500 flex items-center justify-center"
@@ -289,21 +315,21 @@ export default function CourseDetailsPage() {
                 onClick={() => setIsPrintModalOpen(true)}
                 className="w-full py-2.5 px-3 rounded-xl border border-brand-200 dark:border-brand-800/80 bg-brand-50/50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 text-xs font-bold hover:bg-brand-100/50 dark:hover:bg-brand-900/40 transition-colors flex items-center justify-center gap-2 mb-4"
               >
-                <Truck size={15} /> Order Printed Study Pack ($19.99 Home Delivery)
+                <Truck size={15} /> {t.courseDetails.orderPrintedPack}
               </button>
               
               <p className="text-center text-xs text-slate-500 dark:text-slate-400 font-medium mb-5">
-                Includes tamper-proof cryptographic certificate.
+                {language === "ar" ? "تتضمن شهادة تخرج رقمية موثقة برمز تشفير فريد." : "Includes tamper-proof cryptographic certificate."}
               </p>
               
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5 text-xs text-slate-600 dark:text-slate-300 font-medium">
                 <div className="flex items-center gap-2.5">
                   <Shield className="text-brand-600 dark:text-brand-400" size={17} />
-                  <span>256-bit SSL encrypted checkout</span>
+                  <span>{language === "ar" ? "دفع مشفر وآمن 256-بت" : "256-bit SSL encrypted checkout"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" size={17} />
-                  <span>Cross-platform interactive player</span>
+                  <span>{language === "ar" ? "متوافق مع الهواتف والأجهزة اللوحية والحواسيب" : "Cross-platform interactive player"}</span>
                 </div>
               </div>
             </div>
@@ -320,7 +346,7 @@ export default function CourseDetailsPage() {
             {/* Section 1: Inclusions & Exclusions */}
             <section>
               <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
-                Course Package & Transparency Breakdown
+                {t.courseDetails.packageBreakdown}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 
@@ -328,7 +354,7 @@ export default function CourseDetailsPage() {
                 <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-6 rounded-3xl border border-emerald-200 dark:border-emerald-900">
                   <h3 className="font-bold text-sm text-emerald-800 dark:text-emerald-300 uppercase tracking-wider mb-4 flex items-center gap-2">
                     <CheckCircle2 size={18} className="text-emerald-600" />
-                    What&apos;s Included
+                    {t.courseDetails.whatsIncluded}
                   </h3>
                   <ul className="space-y-3">
                     {inclusionsList.map((inc: string, idx: number) => (
@@ -344,7 +370,7 @@ export default function CourseDetailsPage() {
                 <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800">
                   <h3 className="font-bold text-sm text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
                     <XCircle size={18} className="text-slate-400" />
-                    What&apos;s NOT Included
+                    {t.courseDetails.whatsNotIncluded}
                   </h3>
                   <ul className="space-y-3">
                     {exclusionsList.map((exc: string, idx: number) => (
@@ -362,14 +388,14 @@ export default function CourseDetailsPage() {
             {/* Section 2: Learning Environment & Prerequisites */}
             <section>
               <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
-                System Prerequisites & Academic Expectations
+                {t.courseDetails.prerequisites} & {t.courseDetails.gradingCriteria}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white mb-3">
                     <Laptop size={18} className="text-brand-600" />
-                    <span>Technical Prerequisites</span>
+                    <span>{t.courseDetails.prerequisites}</span>
                   </div>
                   <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
                     {prerequisitesList.map((p: string, i: number) => (
@@ -384,10 +410,13 @@ export default function CourseDetailsPage() {
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white mb-3">
                     <Award size={18} className="text-brand-600" />
-                    <span>Grading & Certification Criteria</span>
+                    <span>{t.courseDetails.gradingCriteria}</span>
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {course.gradingCriteria || "Grading is structured across modular checkpoints: 60% automated quiz pass rate (unlimited re-attempts with randomized answer sets) and 40% practical interactive lab completion. Achieving 80% total score earns an official verified certificate."}
+                    {course.gradingCriteria || (language === "ar" 
+                      ? "يتم توزيع الدرجات الأكاديمية عبر مراحل المنهج: 60% لاجتياز الاختبارات القصيرة بنجاح (مع محاولات غير محدودة) و40% للمشاريع التطبيقية. تحقيق نسبة 80% فأكثر يمنحك شهادة تخرج موثقة."
+                      : "Grading is structured across modular checkpoints: 60% automated quiz pass rate (unlimited re-attempts with randomized answer sets) and 40% practical interactive lab completion. Achieving 80% total score earns an official verified certificate."
+                    )}
                   </p>
                 </div>
 
@@ -397,21 +426,21 @@ export default function CourseDetailsPage() {
             {/* Section 3: Syllabus */}
             <section>
               <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
-                Syllabus & Curriculum Overview
+                {t.courseDetails.syllabusOverview}
               </h2>
-              <div className="prose max-w-none text-slate-700 dark:text-slate-300 whitespace-pre-line border-l-4 border-brand-500 pl-6 py-4 leading-relaxed bg-slate-50/50 dark:bg-slate-900 p-6 rounded-r-3xl border border-slate-200/80 dark:border-slate-800 text-sm">
+              <div className="prose max-w-none text-slate-700 dark:text-slate-300 whitespace-pre-line border-l-4 rtl:border-l-0 rtl:border-r-4 border-brand-500 pl-6 rtl:pl-0 rtl:pr-6 py-4 leading-relaxed bg-slate-50/50 dark:bg-slate-900 p-6 rounded-r-3xl rtl:rounded-r-none rtl:rounded-l-3xl border border-slate-200/80 dark:border-slate-800 text-sm">
                 {course.syllabus}
               </div>
 
               {/* Modules breakdown if available */}
               {course.modules && course.modules.length > 0 && (
                 <div className="mt-6 space-y-3">
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">Curriculum Modules</h3>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">{t.courseDetails.curriculumModules}</h3>
                   {course.modules.map((mod: any, mIdx: number) => (
                     <div key={mod.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                       <div className="flex justify-between items-center text-sm font-bold text-slate-900 dark:text-white mb-2">
-                        <span>Module {mIdx + 1}: {mod.title}</span>
-                        <span className="text-xs text-slate-500 font-normal">{mod.lessons?.length || 0} Lessons</span>
+                        <span>{language === "ar" ? `الوحدة ${mIdx + 1}:` : `Module ${mIdx + 1}:`} {mod.title}</span>
+                        <span className="text-xs text-slate-500 font-normal">{mod.lessons?.length || 0} {language === "ar" ? "دروس" : "Lessons"}</span>
                       </div>
                       <div className="space-y-1">
                         {mod.lessons?.map((les: any, lIdx: number) => (
@@ -432,23 +461,23 @@ export default function CourseDetailsPage() {
               <div className="flex items-center gap-2 mb-6">
                 <MessageSquare className="text-brand-600 dark:text-brand-400" size={24} />
                 <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                  Student Feedback & Reviews
+                  {t.courseDetails.studentFeedback}
                 </h2>
               </div>
 
               {/* Leave a review */}
               <form onSubmit={handleReviewSubmit} className="bg-slate-50 dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 mb-8">
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-3">Enrolled in this course? Leave a review</h3>
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-3">{t.courseDetails.leaveReview}</h3>
                 <div className="flex items-center gap-3 mb-3">
-                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Rating:</label>
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">{t.courseDetails.rating}:</label>
                   <select 
                     value={newRating} 
                     onChange={(e) => setNewRating(Number(e.target.value))}
                     className="px-3 py-1.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   >
-                    <option value={5}>⭐⭐⭐⭐⭐ (5 Stars - Exceptional)</option>
-                    <option value={4}>⭐⭐⭐⭐ (4 Stars - Very Good)</option>
-                    <option value={3}>⭐⭐⭐ (3 Stars - Average)</option>
+                    <option value={5}>⭐⭐⭐⭐⭐ (5 Stars)</option>
+                    <option value={4}>⭐⭐⭐⭐ (4 Stars)</option>
+                    <option value={3}>⭐⭐⭐ (3 Stars)</option>
                     <option value={2}>⭐⭐ (2 Stars)</option>
                     <option value={1}>⭐ (1 Star)</option>
                   </select>
@@ -457,12 +486,12 @@ export default function CourseDetailsPage() {
                   rows={3}
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Share your experience with the lectures, checkpoints, and materials..."
+                  placeholder={language === "ar" ? "شارك تجربتك الأكاديمية مع الشروحات والاختبارات القصيرة..." : "Share your experience with the lectures, checkpoints, and materials..."}
                   required
                   className="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-brand-500 mb-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none"
                 />
                 <button type="submit" disabled={isSubmittingReview} className="btn-primary py-2.5 px-6 text-xs font-bold rounded-xl">
-                  {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                  {isSubmittingReview ? "..." : t.courseDetails.submitReview}
                 </button>
               </form>
 
@@ -484,7 +513,9 @@ export default function CourseDetailsPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-slate-500 dark:text-slate-400 text-sm italic">No reviews yet. Be the first to enroll and review!</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm italic">
+                  {language === "ar" ? "لا توجد تقييمات بعد. كن أول من يسجل ويقيم!" : "No reviews yet. Be the first to enroll and review!"}
+                </p>
               )}
             </section>
             
@@ -496,7 +527,7 @@ export default function CourseDetailsPage() {
             {/* Instructor Dossier */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
               <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 block mb-3">
-                Faculty Instructor
+                {t.courseDetails.facultyInstructor}
               </span>
               
               <div className="flex items-center gap-4 mb-4">
@@ -513,7 +544,7 @@ export default function CourseDetailsPage() {
                 )}
                 <div>
                   <h3 className="font-bold text-base text-slate-900 dark:text-white leading-tight">
-                    {course.instructor?.name || "KLZ Faculty"}
+                    {course.instructor?.name || (language === "ar" ? "هيئة التدريس" : "KLZ Faculty")}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     {course.instructor?.title || "Lead Curriculum Fellow"}
@@ -531,7 +562,10 @@ export default function CourseDetailsPage() {
               )}
 
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                {course.instructor?.bio || "Faculty member specializing in high-performance architectures, reproducible computing, and student mentoring."}
+                {course.instructor?.bio || (language === "ar" 
+                  ? "عضو هيئة تدريس متخصص في الأنظمة الهندسية وتطبيقات الذكاء الاصطناعي والإشراف الأكاديمي."
+                  : "Faculty member specializing in high-performance architectures, reproducible computing, and student mentoring."
+                )}
               </p>
 
               {/* Social Links */}
@@ -559,15 +593,15 @@ export default function CourseDetailsPage() {
               <div className="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center mb-4">
                 <Truck size={20} />
               </div>
-              <h4 className="font-bold text-base mb-2">Physical Study Guides Delivered</h4>
+              <h4 className="font-bold text-base mb-2">{t.courseDetails.printedBookletTitle}</h4>
               <p className="text-xs text-slate-300 leading-relaxed mb-6">
-                Prefer studying with physical pages? Order high-quality spiral-bound lecture summaries and cheat sheets delivered to your home.
+                {t.courseDetails.printedBookletDesc}
               </p>
               <button
                 onClick={() => setIsPrintModalOpen(true)}
                 className="w-full py-3 rounded-xl bg-white text-slate-950 font-bold text-xs hover:bg-slate-100 transition-colors shadow-md"
               >
-                Order Printed Materials
+                {t.courseDetails.orderPrintButton}
               </button>
             </div>
 
@@ -583,27 +617,27 @@ export default function CourseDetailsPage() {
             
             <button
               onClick={() => setIsPrintModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              className="absolute top-5 right-5 rtl:right-auto rtl:left-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
               <X size={20} />
             </button>
 
             <div className="mb-6">
               <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 mb-2">
-                Door-to-Door Fulfillment
+                {t.courseDetails.doorstepFulfillment}
               </span>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                Order Course Print Materials
+                {t.courseDetails.orderPrintMaterials}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                For: <strong className="text-slate-700 dark:text-slate-300">{course.title}</strong>
+                {language === "ar" ? "خاص بدورة:" : "For:"} <strong className="text-slate-700 dark:text-slate-300">{course.title}</strong>
               </p>
             </div>
 
             {printOrderStatus === "success" ? (
               <div className="text-center py-6">
                 <PackageCheck size={48} className="text-emerald-500 mx-auto mb-3" />
-                <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Order Queued for Printing!</h4>
+                <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">{t.courseDetails.orderQueued}</h4>
                 <p className="text-xs text-slate-500 mb-6">{printOrderMessage}</p>
                 <button
                   onClick={() => {
@@ -612,7 +646,7 @@ export default function CourseDetailsPage() {
                   }}
                   className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs"
                 >
-                  Close
+                  {language === "ar" ? "إغلاق" : "Close"}
                 </button>
               </div>
             ) : (
@@ -627,23 +661,23 @@ export default function CourseDetailsPage() {
                 {/* Item Type Selector */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Material Item Type
+                    {language === "ar" ? "نوع المطبوعات التعليمية" : "Material Item Type"}
                   </label>
                   <select
                     value={printForm.itemType}
                     onChange={(e) => setPrintForm({ ...printForm, itemType: e.target.value as PrintItemType })}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
                   >
-                    <option value="SUMMARY_BOOKLET">Spiral-Bound Course Summary Booklet ($19.99)</option>
-                    <option value="FULL_LECTURE_NOTES">Complete Annotated Lecture Notes ($29.99)</option>
-                    <option value="STUDY_GUIDE">Quick Reference & Cheat Sheets ($14.99)</option>
-                    <option value="VERIFIED_PHYSICAL_CERTIFICATE">Gold-Foil Embossed Certificate ($34.99)</option>
+                    <option value="SUMMARY_BOOKLET">{language === "ar" ? "مذكرة ملخص الدورة الشامل ومجلد أوراق العمل (19.99$)" : "Spiral-Bound Course Summary Booklet ($19.99)"}</option>
+                    <option value="FULL_LECTURE_NOTES">{language === "ar" ? "المذكرات الكاملة والشروحات التفصيلية للمحاضرات (29.99$)" : "Complete Annotated Lecture Notes ($29.99)"}</option>
+                    <option value="STUDY_GUIDE">{language === "ar" ? "الدليل المرجعي السريع والبطاقات التلخيصية (14.99$)" : "Quick Reference & Cheat Sheets ($14.99)"}</option>
+                    <option value="VERIFIED_PHYSICAL_CERTIFICATE">{language === "ar" ? "شهادة تخرج كرتونية فاخرة ومختومة بختم ذهبي (34.99$)" : "Gold-Foil Embossed Certificate ($34.99)"}</option>
                   </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Recipient Name *</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.courseDetails.recipientName} *</label>
                     <input
                       type="text"
                       required
@@ -654,7 +688,7 @@ export default function CourseDetailsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Phone Number *</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.courseDetails.phone} *</label>
                     <input
                       type="tel"
                       required
@@ -667,7 +701,7 @@ export default function CourseDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Street Address Line 1 *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.courseDetails.address} *</label>
                   <input
                     type="text"
                     required
@@ -680,35 +714,35 @@ export default function CourseDetailsPage() {
 
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">City *</label>
+                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.courseDetails.city} *</label>
                     <input
                       type="text"
                       required
                       value={printForm.city}
                       onChange={(e) => setPrintForm({ ...printForm, city: e.target.value })}
-                      placeholder="Palo Alto"
+                      placeholder="Cairo / Riyadh"
                       className="w-full px-2.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">State / Prov *</label>
+                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.courseDetails.state} *</label>
                     <input
                       type="text"
                       required
                       value={printForm.state}
                       onChange={(e) => setPrintForm({ ...printForm, state: e.target.value })}
-                      placeholder="CA"
+                      placeholder="Province"
                       className="w-full px-2.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Postal Code *</label>
+                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.courseDetails.postalCode} *</label>
                     <input
                       type="text"
                       required
                       value={printForm.postalCode}
                       onChange={(e) => setPrintForm({ ...printForm, postalCode: e.target.value })}
-                      placeholder="94301"
+                      placeholder="11511"
                       className="w-full px-2.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none"
                     />
                   </div>
@@ -720,7 +754,7 @@ export default function CourseDetailsPage() {
                     disabled={printOrderStatus === "submitting"}
                     className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition-all disabled:opacity-50"
                   >
-                    {printOrderStatus === "submitting" ? "Processing Fulfillment..." : "Confirm Delivery Order"}
+                    {printOrderStatus === "submitting" ? "..." : t.courseDetails.confirmOrder}
                   </button>
                 </div>
               </form>

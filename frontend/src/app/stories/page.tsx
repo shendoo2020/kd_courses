@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
-  Star, Quote, Award, ExternalLink, CheckCircle2, 
-  Sparkles, ArrowRight, ShieldCheck, Heart, MessageSquarePlus, X 
+  Star, Quote, ExternalLink, CheckCircle2, 
+  Sparkles, ShieldCheck, MessageSquarePlus, X 
 } from "lucide-react";
 import { testimonialsApi, Testimonial } from "@/lib/api";
+import { useLanguage } from "@/lib/LanguageContext";
 
 const SAMPLE_TESTIMONIALS: Testimonial[] = [
   {
@@ -108,6 +109,8 @@ const SAMPLE_VERIFIED_CERTS = [
 ];
 
 export default function SuccessStoriesPage() {
+  const { language, isRTL, t } = useLanguage();
+
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -162,9 +165,9 @@ export default function SuccessStoriesPage() {
         
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-          <Link href="/" className="hover:text-brand-600 transition-colors">Catalog</Link>
+          <Link href="/" className="hover:text-brand-600 transition-colors">{t.nav.catalog}</Link>
           <span>/</span>
-          <span className="text-slate-900 dark:text-slate-100 font-semibold">Student Stories & Verified Outcomes</span>
+          <span className="text-slate-900 dark:text-slate-100 font-semibold">{t.stories.title}</span>
         </nav>
 
         {/* Hero Banner */}
@@ -172,13 +175,13 @@ export default function SuccessStoriesPage() {
           <div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-400 border border-brand-200 dark:border-brand-800 mb-3">
               <Sparkles size={14} className="text-brand-500" />
-              Verified Graduate Outcomes
+              {t.stories.badge}
             </div>
             <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
-              Real Impact, Proven Careers
+              {t.stories.title}
             </h1>
             <p className="mt-3 text-base text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-              Explore how students, researchers, and engineers around the globe accelerated their mastery and secured industry credentials with KLZ Academy.
+              {t.stories.desc}
             </p>
           </div>
 
@@ -186,7 +189,7 @@ export default function SuccessStoriesPage() {
             onClick={() => setIsModalOpen(true)}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition-all shrink-0"
           >
-            <MessageSquarePlus size={16} /> Share Your Experience
+            <MessageSquarePlus size={16} /> {t.stories.shareExperience}
           </button>
         </div>
 
@@ -216,7 +219,7 @@ export default function SuccessStoriesPage() {
                 {item.course?.title && (
                   <div className="mb-4 pt-3 border-t border-slate-100 dark:border-slate-800">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 block truncate">
-                      Completed: {item.course.title}
+                      {language === "ar" ? "أتم الدورة:" : "Completed:"} {item.course.title}
                     </span>
                   </div>
                 )}
@@ -255,14 +258,14 @@ export default function SuccessStoriesPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 mb-2">
-                Tamper-Proof Audit Trail
+                {t.stories.verifyBadge}
               </span>
               <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                Recent Verified Graduate Credentials
+                {t.stories.verifiedCerts}
               </h2>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs sm:text-right">
-              Every certificate contains an immutable cryptographic hash verifiable by employers.
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs sm:text-right rtl:sm:text-left">
+              {language === "ar" ? "تحتوي كل شهادة على كود تحقق فريد يمكن لأصحاب العمل فحصه." : "Every certificate contains an immutable cryptographic hash verifiable by employers."}
             </p>
           </div>
 
@@ -275,7 +278,7 @@ export default function SuccessStoriesPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
-                      <ShieldCheck size={16} /> Verified Credential
+                      <ShieldCheck size={16} /> {t.stories.verifyBadge}
                     </div>
                     <span className="text-[10px] font-mono text-slate-400">{cert.issuedDate}</span>
                   </div>
@@ -294,7 +297,7 @@ export default function SuccessStoriesPage() {
                     href={cert.credentialUrl}
                     className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
                   >
-                    Verify <ExternalLink size={12} />
+                    {language === "ar" ? "تحقق" : "Verify"} <ExternalLink size={12} />
                   </Link>
                 </div>
               </div>
@@ -308,28 +311,28 @@ export default function SuccessStoriesPage() {
             <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 relative animate-in fade-in zoom-in-95 duration-150">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute top-5 right-5 rtl:right-auto rtl:left-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X size={20} />
               </button>
 
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                Share Your Graduate Experience
+                {t.stories.modalTitle}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-                Your review helps inspire future scholars and provides direct feedback to faculty.
+                {language === "ar" ? "رأيك وتجربتك يلهم الطلاب ويوجه هيئة التدريس نحو التطوير المستمر." : "Your review helps inspire future scholars and provides direct feedback to faculty."}
               </p>
 
               {submitSuccess ? (
                 <div className="text-center py-8">
                   <CheckCircle2 size={40} className="text-emerald-500 mx-auto mb-3" />
-                  <h4 className="font-bold text-base text-slate-900 dark:text-white">Review Submitted!</h4>
-                  <p className="text-xs text-slate-500 mt-1">Thank you for contributing to the KLZ Academy alumni community.</p>
+                  <h4 className="font-bold text-base text-slate-900 dark:text-white">{language === "ar" ? "تم نشر تقييمك بنجاح!" : "Review Submitted!"}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{language === "ar" ? "شكراً لمساهمتك في مجتمع خريجي أكاديمية KLZ." : "Thank you for contributing to the KLZ Academy alumni community."}</p>
                 </div>
               ) : (
                 <form onSubmit={handlePostReview} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Your Full Name *</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.customCourses.fullName} *</label>
                     <input
                       type="text"
                       required
@@ -342,7 +345,7 @@ export default function SuccessStoriesPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Your Role / Field *</label>
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.stories.roleCompany} *</label>
                       <input
                         type="text"
                         required
@@ -353,7 +356,7 @@ export default function SuccessStoriesPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Company or School *</label>
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.customCourses.organization} *</label>
                       <input
                         type="text"
                         required
@@ -366,7 +369,7 @@ export default function SuccessStoriesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Rating (1 to 5 Stars)</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.courseDetails.rating}</label>
                     <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -386,13 +389,13 @@ export default function SuccessStoriesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Your Testimonial / Story *</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t.stories.yourStory} *</label>
                     <textarea
                       rows={4}
                       required
                       value={reviewForm.quote}
                       onChange={(e) => setReviewForm({ ...reviewForm, quote: e.target.value })}
-                      placeholder="How did the curriculum, checkpoints, or study booklets impact your journey?"
+                      placeholder={language === "ar" ? "كيف ساهمت المناهج والمذكرات الدراسية المطبوعة في مسيرتك العلمية والمهنية؟" : "How did the curriculum, checkpoints, or study booklets impact your journey?"}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                     />
                   </div>
@@ -401,7 +404,7 @@ export default function SuccessStoriesPage() {
                     type="submit"
                     className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition-all"
                   >
-                    Post Testimonial
+                    {t.stories.postReview}
                   </button>
                 </form>
               )}

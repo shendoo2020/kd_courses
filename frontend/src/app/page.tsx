@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api, Course, TargetAudience, DeliveryMode } from "@/lib/api";
+import { api, Course } from "@/lib/api";
 import Link from "next/link";
 import { 
-  BookOpen, User, Search, Star, Filter, Calendar, 
-  Clock, Sparkles, GraduationCap, Building2, Briefcase, 
-  ArrowRight, ShieldCheck, Truck, Users, Video
+  BookOpen, Search, Star, Clock, Sparkles, GraduationCap, 
+  Building2, ArrowRight, ShieldCheck, Video, ArrowLeft
 } from "lucide-react";
-
-const CATEGORIES = ["All", "Development", "Data Science", "Business", "Design", "Cybersecurity"];
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function CatalogPage() {
+  const { language, isRTL, t } = useLanguage();
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +22,15 @@ export default function CatalogPage() {
   const [selectedAudience, setSelectedAudience] = useState<string>("ALL");
   const [selectedDelivery, setSelectedDelivery] = useState<string>("ALL");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
+
+  const CATEGORIES = [
+    { id: "All", label: language === "ar" ? "الكل" : "All" },
+    { id: "Development", label: language === "ar" ? "البرمجة والتطوير" : "Development" },
+    { id: "Data Science", label: language === "ar" ? "علوم البيانات والذكاء الاصطناعي" : "Data Science" },
+    { id: "Business", label: language === "ar" ? "إدارة الأعمال" : "Business" },
+    { id: "Design", label: language === "ar" ? "التصميم وواجهات المستخدم" : "Design" },
+    { id: "Cybersecurity", label: language === "ar" ? "الأمن السيبراني" : "Cybersecurity" },
+  ];
 
   const fetchCourses = async () => {
     setIsLoading(true);
@@ -53,10 +62,10 @@ export default function CatalogPage() {
 
   const getAudienceLabel = (audience?: string) => {
     switch (audience) {
-      case "K12": return "K-12 Youth STEM";
-      case "HIGHER_ED": return "University / College";
-      case "PROFESSIONAL": return "Professional";
-      default: return "Academic";
+      case "K12": return language === "ar" ? "المدارس (K-12)" : "K-12 Youth STEM";
+      case "HIGHER_ED": return language === "ar" ? "الجامعات والمعاهد" : "University / College";
+      case "PROFESSIONAL": return language === "ar" ? "المسار المهني" : "Professional";
+      default: return language === "ar" ? "أكاديمي" : "Academic";
     }
   };
 
@@ -79,33 +88,33 @@ export default function CatalogPage() {
           
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-semibold mb-6">
             <Sparkles size={14} className="text-brand-400" />
-            <span>Coursera & DeepLearning.AI Standard Academic Platform</span>
+            <span>{t.catalog.heroBadge}</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6 leading-tight">
-            Rigorous Courses for <span className="text-brand-400">Schools, Universities & Industry</span>.
+            {t.catalog.heroTitlePart1} <span className="text-brand-400">{t.catalog.heroTitlePart2}</span>
           </h1>
           
           <p className="text-base md:text-lg text-slate-300 max-w-3xl mb-8 leading-relaxed">
-            Multi-level technical curricula engineered with interactive coding checkpoints, live faculty keynotes, and door-to-door printed study guide fulfillment.
+            {t.catalog.heroDesc}
           </p>
 
           {/* Search Bar */}
           <div className="max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-2 flex items-center gap-3 border border-slate-200 dark:border-slate-800 mb-8">
-            <Search className="text-slate-400 ml-3 shrink-0" size={22} />
+            <Search className="text-slate-400 mx-3 shrink-0" size={22} />
             <input 
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by topic, algorithm, or course title..."
+              placeholder={t.catalog.searchPlaceholder}
               className="flex-1 px-2 py-3 text-slate-900 dark:text-white placeholder-slate-400 outline-none text-sm sm:text-base bg-transparent font-medium"
             />
             {searchTerm && (
               <button 
                 onClick={() => setSearchTerm("")}
-                className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-2 font-semibold"
+                className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-3 font-semibold"
               >
-                Clear
+                {t.catalog.clear}
               </button>
             )}
           </div>
@@ -116,25 +125,25 @@ export default function CatalogPage() {
               href="/custom-courses" 
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-200 transition-colors"
             >
-              <Building2 size={14} className="text-brand-400" /> Custom Cohort Requests
+              <Building2 size={14} className="text-brand-400" /> {t.nav.customCourses}
             </Link>
             <Link 
               href="/events" 
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-200 transition-colors"
             >
-              <Video size={14} className="text-emerald-400" /> Seminars & Keynotes
+              <Video size={14} className="text-emerald-400" /> {t.nav.events}
             </Link>
             <Link 
               href="/teach" 
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-200 transition-colors"
             >
-              <GraduationCap size={14} className="text-amber-400" /> Teach with Us
+              <GraduationCap size={14} className="text-amber-400" /> {t.nav.teach}
             </Link>
             <Link 
               href="/stories" 
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-200 transition-colors"
             >
-              <ShieldCheck size={14} className="text-indigo-400" /> Graduate Outcomes
+              <ShieldCheck size={14} className="text-indigo-400" /> {t.nav.stories}
             </Link>
           </div>
 
@@ -147,19 +156,19 @@ export default function CatalogPage() {
         {/* Level 1: Target Audience Group Tabs */}
         <div className="mb-6">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
-            <GraduationCap size={16} /> Target Academic Group:
+            <GraduationCap size={16} /> {t.catalog.targetAudience}:
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { id: "ALL", label: "All Pathways", sub: "Complete catalog" },
-              { id: "K12", label: "Schools (K-12)", sub: "Youth STEM & AP Prep" },
-              { id: "HIGHER_ED", label: "Universities / Colleges", sub: "Undergraduate & Graduate" },
-              { id: "PROFESSIONAL", label: "Professional & Enterprise", sub: "Production engineering" },
+              { id: "ALL", label: t.catalog.allTiers, sub: language === "ar" ? "المنهج الشامل" : "Complete catalog" },
+              { id: "K12", label: t.catalog.k12, sub: language === "ar" ? "الناشئة والمبتدئين" : "Youth STEM & AP Prep" },
+              { id: "HIGHER_ED", label: t.catalog.higherEd, sub: language === "ar" ? "الدورات الجامعية" : "Undergrad & Graduate" },
+              { id: "PROFESSIONAL", label: t.catalog.professional, sub: language === "ar" ? "المستوى الصناعي" : "Production engineering" },
             ].map((tier) => (
               <button
                 key={tier.id}
                 onClick={() => setSelectedAudience(tier.id)}
-                className={`p-3.5 rounded-2xl border text-left transition-all ${
+                className={`p-3.5 rounded-2xl border text-left rtl:text-right transition-all ${
                   selectedAudience === tier.id
                     ? "bg-brand-600 text-white border-brand-600 shadow-sm"
                     : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300"
@@ -181,15 +190,15 @@ export default function CatalogPage() {
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => (
               <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  selectedCategory === cat 
+                  selectedCategory === cat.id 
                     ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-sm" 
                     : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
                 }`}
               >
-                {cat}
+                {cat.label}
               </button>
             ))}
           </div>
@@ -204,26 +213,30 @@ export default function CatalogPage() {
               aria-label="Filter by delivery format"
               className="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
-              <option value="ALL">All Delivery Formats</option>
-              <option value="SELF_PACED">Self-Paced Portal</option>
-              <option value="COHORT_BASED">Live Cohort</option>
-              <option value="HYBRID">Hybrid (Blended)</option>
-              <option value="IN_PERSON">In-Person Workshop</option>
+              <option value="ALL">{t.catalog.allDelivery}</option>
+              <option value="SELF_PACED">{t.catalog.selfPaced}</option>
+              <option value="COHORT_BASED">{t.catalog.cohortBased}</option>
+              <option value="HYBRID">{t.catalog.hybrid}</option>
+              <option value="IN_PERSON">{t.catalog.inPerson}</option>
             </select>
 
             {/* Price Segment */}
             <div className="flex items-center text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-0.5">
-              {(["all", "free", "paid"] as const).map((mode) => (
+              {[
+                { id: "all", label: t.catalog.allPrices },
+                { id: "free", label: t.catalog.freeOnly },
+                { id: "paid", label: t.catalog.paidOnly },
+              ].map((mode) => (
                 <button
-                  key={mode}
-                  onClick={() => setPriceFilter(mode)}
-                  className={`px-3 py-1.5 rounded-lg font-bold capitalize transition-colors ${
-                    priceFilter === mode 
+                  key={mode.id}
+                  onClick={() => setPriceFilter(mode.id as any)}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                    priceFilter === mode.id 
                       ? "bg-brand-600 text-white" 
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  {mode}
+                  {mode.label}
                 </button>
               ))}
             </div>
@@ -234,10 +247,10 @@ export default function CatalogPage() {
         {/* Catalog Grid Header */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            {selectedCategory === "All" ? "Featured Curriculum" : `${selectedCategory} Courses`}
+            {t.catalog.featuredCurriculum}
           </h2>
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            {courses.length} courses available
+            {courses.length} {t.catalog.coursesAvailable}
           </span>
         </div>
 
@@ -255,9 +268,9 @@ export default function CatalogPage() {
         ) : courses.length === 0 ? (
           <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
             <BookOpen size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">No matching curriculum found</h3>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">{t.catalog.noCoursesFound}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-              Need a specialized syllabus not listed in our standard catalog?
+              {language === "ar" ? "هل تبحث عن منهج مخصص لمؤسستك أو قسمك الأكاديمي؟" : "Need a specialized syllabus not listed in our standard catalog?"}
             </p>
             <div className="flex justify-center gap-3">
               <button 
@@ -270,13 +283,13 @@ export default function CatalogPage() {
                 }}
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
               >
-                Reset Filters
+                {t.catalog.resetFilters}
               </button>
               <Link 
                 href="/custom-courses" 
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white shadow-sm inline-flex items-center gap-1.5"
               >
-                Request Custom Course <ArrowRight size={14} />
+                {t.catalog.requestCustom} {isRTL ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
               </Link>
             </div>
           </div>
@@ -294,12 +307,12 @@ export default function CatalogPage() {
                   <BookOpen size={40} className="text-white/60 group-hover:scale-110 transition-transform duration-300" />
                   
                   {/* Category Pill */}
-                  <span className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-slate-800 dark:text-white text-[11px] px-2.5 py-1 rounded-lg font-bold tracking-wide">
+                  <span className="absolute top-3 left-3 rtl:left-auto rtl:right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-slate-800 dark:text-white text-[11px] px-2.5 py-1 rounded-lg font-bold tracking-wide">
                     {course.category || "Development"}
                   </span>
 
                   {/* Target Audience Badge */}
-                  <span className={`absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-md border ${getAudienceColor(course.targetAudience)}`}>
+                  <span className={`absolute top-3 right-3 rtl:right-auto rtl:left-3 text-[10px] font-bold px-2 py-0.5 rounded-md border ${getAudienceColor(course.targetAudience)}`}>
                     {getAudienceLabel(course.targetAudience)}
                   </span>
 
@@ -307,7 +320,7 @@ export default function CatalogPage() {
                   <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-[11px] text-white/90 font-medium">
                     <span className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded-md backdrop-blur-sm">
                       <Clock size={12} className="text-brand-300" />
-                      {course.durationWeeks ? `${course.durationWeeks} Wks` : "Self-Paced"}
+                      {course.durationWeeks ? `${course.durationWeeks} ${t.catalog.weeks}` : (language === "ar" ? "تعلم ذاتي" : "Self-Paced")}
                     </span>
                     <span className="bg-black/40 px-2 py-0.5 rounded-md backdrop-blur-sm">
                       {course.deliveryMode ? course.deliveryMode.replace('_', ' ') : "Online"}
@@ -340,7 +353,7 @@ export default function CatalogPage() {
                         </div>
                       )}
                       <span className="truncate font-medium text-slate-700 dark:text-slate-300">
-                        {course.instructor?.name || "KLZ Faculty"}
+                        {course.instructor?.name || (language === "ar" ? "هيئة التدريس" : "KLZ Faculty")}
                       </span>
                     </div>
 
@@ -355,10 +368,10 @@ export default function CatalogPage() {
                   {/* Pricing & Syllabus CTA */}
                   <div className="flex justify-between items-center font-black text-slate-900 dark:text-white">
                     <span className="text-base">
-                      {course.price === 0 ? "Free" : `$${course.price.toFixed(2)}`}
+                      {course.price === 0 ? t.catalog.free : `$${course.price.toFixed(2)}`}
                     </span>
-                    <span className="text-brand-600 dark:text-brand-400 text-xs font-bold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                      Syllabus & Details &rarr;
+                    <span className="text-brand-600 dark:text-brand-400 text-xs font-bold group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform inline-flex items-center gap-1">
+                      {t.catalog.viewSyllabus} {isRTL ? "←" : "→"}
                     </span>
                   </div>
                 </div>

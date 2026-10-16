@@ -3,12 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { 
-  GraduationCap, BookOpen, Video, DollarSign, Award, 
-  CheckCircle2, ArrowRight, Sparkles, ShieldCheck, Globe, Users 
+  BookOpen, DollarSign, 
+  CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Globe 
 } from "lucide-react";
 import { instructorApplicationsApi, TargetAudience } from "@/lib/api";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export default function TeachWithUsPage() {
+  const { language, isRTL, t } = useLanguage();
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -40,7 +43,7 @@ export default function TeachWithUsPage() {
     } catch (err: any) {
       console.error("Instructor application error:", err);
       setErrorMessage(
-        err.response?.data?.message || "Failed to submit application. Please review required fields and try again."
+        err.response?.data?.message || (language === "ar" ? "تعذر إرسال الطلب. يرجى مراجعة الحقول المطلوبة والمحاولة مرة أخرى." : "Failed to submit application. Please review required fields and try again.")
       );
     } finally {
       setIsSubmitting(false);
@@ -53,22 +56,22 @@ export default function TeachWithUsPage() {
         
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-8">
-          <Link href="/" className="hover:text-brand-600 transition-colors">Catalog</Link>
+          <Link href="/" className="hover:text-brand-600 transition-colors">{t.nav.catalog}</Link>
           <span>/</span>
-          <span className="text-slate-900 dark:text-slate-100 font-semibold">Faculty & Instructor Onboarding</span>
+          <span className="text-slate-900 dark:text-slate-100 font-semibold">{t.teach.badge}</span>
         </nav>
 
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-400 border border-brand-200 dark:border-brand-800 mb-4">
             <Sparkles size={14} className="text-brand-500" />
-            Join Our Global Academic Faculty
+            {t.teach.badge}
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
-            Share Your Expertise with 50,000+ Ambitious Minds
+            {t.teach.title}
           </h1>
           <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-            KLZ Academy partners with university faculty, staff engineers, and industry authorities to author world-class curriculum, interactive checkpoints, and published study guides.
+            {t.teach.desc}
           </p>
         </div>
 
@@ -78,24 +81,24 @@ export default function TeachWithUsPage() {
             <div className="w-12 h-12 bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 rounded-xl flex items-center justify-center mx-auto mb-3">
               <DollarSign size={24} />
             </div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-1">Competitive Revenue Share</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Earn up to 70% of course enrollments, institutional cohort licenses, and printed study guide royalties.</p>
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-1">{t.teach.revShare}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t.teach.revShareDesc}</p>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
             <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mx-auto mb-3">
               <BookOpen size={24} />
             </div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-1">Pedagogical & Studio Support</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Our instructional designers assist with curriculum structure, quiz authoring, and video post-production.</p>
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-1">{t.teach.pedagogy}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t.teach.pedagogyDesc}</p>
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
             <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Globe size={24} />
             </div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-1">Institutional Credibility</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Showcase your verified profile, university affiliation, and professional portfolio to enterprise recruiters.</p>
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-1">{t.teach.credibility}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t.teach.credibilityDesc}</p>
           </div>
         </div>
 
@@ -106,19 +109,23 @@ export default function TeachWithUsPage() {
               <CheckCircle2 size={36} />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
-              Faculty Application Submitted!
+              {t.teach.successTitle}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-              Thank you, <span className="font-bold text-slate-900 dark:text-white">{formData.fullName}</span>. Your proposal for <span className="font-semibold text-brand-600 dark:text-brand-400">&ldquo;{formData.courseProposalTitle}&rdquo;</span> has been sent to our Academic Review Board.
+              {language === "ar" ? (
+                <>شكراً لك، <span className="font-bold text-slate-900 dark:text-white">{formData.fullName}</span>. تم إرسال مقترحك لدورة <span className="font-semibold text-brand-600 dark:text-brand-400">&ldquo;{formData.courseProposalTitle}&rdquo;</span> إلى لجنة الإشراف الأكاديمي.</>
+              ) : (
+                <>Thank you, <span className="font-bold text-slate-900 dark:text-white">{formData.fullName}</span>. Your proposal for <span className="font-semibold text-brand-600 dark:text-brand-400">&ldquo;{formData.courseProposalTitle}&rdquo;</span> has been sent to our Academic Review Board.</>
+              )}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-8 leading-relaxed max-w-md mx-auto">
-              Our Dean of Curriculum will review your credentials, sample media, and syllabus outline. Expect a direct invitation for a 20-minute instructional video review within 3–5 business days.
+              {t.teach.successDesc}
             </p>
             <Link
               href="/"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 text-white font-semibold text-sm hover:bg-brand-700 transition-colors shadow-md"
             >
-              Return to Catalog <ArrowRight size={16} />
+              {t.nav.catalog} {isRTL ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
             </Link>
           </div>
         ) : (
@@ -133,17 +140,17 @@ export default function TeachWithUsPage() {
 
             <form onSubmit={handleSubmit} className="space-y-8">
               
-              {/* Step 1: Personal Credentials & Affiliation */}
+              {/* Step 1 */}
               <div>
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm">1</div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Credentials & Professional Affiliation</h2>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t.teach.step1}</h2>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Full Legal / Academic Name *
+                      {t.customCourses.fullName} *
                     </label>
                     <input
                       type="text"
@@ -157,7 +164,7 @@ export default function TeachWithUsPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Email Address *
+                      {t.customCourses.email} *
                     </label>
                     <input
                       type="email"
@@ -171,7 +178,7 @@ export default function TeachWithUsPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Phone Number *
+                      {t.customCourses.phone} *
                     </label>
                     <input
                       type="tel"
@@ -185,7 +192,7 @@ export default function TeachWithUsPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Current Organization / University *
+                      {t.customCourses.organization} *
                     </label>
                     <input
                       type="text"
@@ -199,7 +206,7 @@ export default function TeachWithUsPage() {
 
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Highest Academic Degree or Industry Title *
+                      {t.teach.degree} *
                     </label>
                     <input
                       type="text"
@@ -213,30 +220,30 @@ export default function TeachWithUsPage() {
                 </div>
               </div>
 
-              {/* Step 2: Verification Links */}
+              {/* Step 2 */}
               <div>
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm">2</div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Verification Links & Portfolio</h2>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t.teach.step2}</h2>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      LinkedIn Profile URL
+                      {t.teach.linkedin}
                     </label>
                     <input
                       type="url"
                       value={formData.linkedinUrl}
                       onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
-                      placeholder="https://linkedin.com/in/kchen"
+                      placeholder="https://linkedin.com/in/..."
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      GitHub / Google Scholar / Portfolio
+                      {t.teach.portfolio}
                     </label>
                     <input
                       type="url"
@@ -249,7 +256,7 @@ export default function TeachWithUsPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Resume / CV Link (Drive / Dropbox)
+                      {t.teach.resume}
                     </label>
                     <input
                       type="url"
@@ -262,17 +269,17 @@ export default function TeachWithUsPage() {
                 </div>
               </div>
 
-              {/* Step 3: Course Proposal */}
+              {/* Step 3 */}
               <div>
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm">3</div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Proposed Course & Pedagogical Outline</h2>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t.teach.step3}</h2>
                 </div>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Course Working Title *
+                      {t.teach.courseTitle} *
                     </label>
                     <input
                       type="text"
@@ -286,26 +293,25 @@ export default function TeachWithUsPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Target Audience Tier
+                      {t.events.audience}
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {[
-                        { id: "K12", label: "K-12 Youth STEM", desc: "Foundational high school" },
-                        { id: "HIGHER_ED", label: "Higher Education", desc: "College undergraduate / grad" },
-                        { id: "PROFESSIONAL", label: "Professional / Industry", desc: "Staff engineers & practitioners" },
+                        { id: "K12", label: t.catalog.k12 },
+                        { id: "HIGHER_ED", label: t.catalog.higherEd },
+                        { id: "PROFESSIONAL", label: t.catalog.professional },
                       ].map((tier) => (
                         <button
                           key={tier.id}
                           type="button"
                           onClick={() => setFormData({ ...formData, targetAudience: tier.id as TargetAudience })}
-                          className={`p-3 rounded-xl border text-left transition-all ${
+                          className={`p-3 rounded-xl border text-left rtl:text-right transition-all ${
                             formData.targetAudience === tier.id
                               ? "border-brand-600 bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold"
                               : "border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-600 dark:text-slate-400"
                           }`}
                         >
                           <span className="block text-xs font-bold">{tier.label}</span>
-                          <span className="block text-[11px] text-slate-500">{tier.desc}</span>
                         </button>
                       ))}
                     </div>
@@ -313,21 +319,21 @@ export default function TeachWithUsPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Curriculum Summary & Learning Objectives *
+                      {t.teach.courseSummary} *
                     </label>
                     <textarea
                       rows={5}
                       required
                       value={formData.courseProposalSummary}
                       onChange={(e) => setFormData({ ...formData, courseProposalSummary: e.target.value })}
-                      placeholder="Describe the target outcomes, prerequisites, lab project ideas, and why this course matters..."
+                      placeholder={language === "ar" ? "اشرح مخرجات التعلم، المهارات المستهدفة، والمشاريع المعملية المقترحة..." : "Describe the target outcomes, prerequisites, lab project ideas, and why this course matters..."}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Sample Teaching Video URL (Loom / YouTube / Google Drive)
+                      {t.teach.sampleVideo}
                     </label>
                     <input
                       type="url"
@@ -343,15 +349,15 @@ export default function TeachWithUsPage() {
               {/* Submit CTA */}
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Applications are reviewed weekly by our Academic Board.
+                  {language === "ar" ? "تتم مراجعة الطلبات أسبوعياً من قِبل اللجنة الأكاديمية." : "Applications are reviewed weekly by our Academic Board."}
                 </p>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-8 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-50 inline-flex items-center gap-2"
                 >
-                  {isSubmitting ? "Submitting Application..." : "Submit Faculty Application"}
-                  {!isSubmitting && <ArrowRight size={16} />}
+                  {isSubmitting ? "..." : t.teach.submitApp}
+                  {!isSubmitting && (isRTL ? <ArrowLeft size={16} /> : <ArrowRight size={16} />)}
                 </button>
               </div>
 
