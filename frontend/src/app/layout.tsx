@@ -11,6 +11,8 @@ import {
 import { api } from "@/lib/api";
 import { LanguageProvider, useLanguage } from "@/lib/LanguageContext";
 
+import NotificationBell from "@/components/NotificationBell";
+
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const { language, direction, isRTL, toggleLanguage, t } = useLanguage();
 
@@ -197,7 +199,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               </button>
 
               {isAuthenticated ? (
-                <div className="relative" ref={dropdownRef}>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <NotificationBell />
+
+                  <div className="relative" ref={dropdownRef}>
                   {/* User Profile Avatar Button */}
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -281,6 +286,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     </div>
                   )}
                 </div>
+              </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <Link 

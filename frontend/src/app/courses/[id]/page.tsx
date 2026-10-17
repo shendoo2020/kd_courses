@@ -78,15 +78,45 @@ export default function CourseDetailsPage() {
     checkEnrollment();
   }, [id]);
 
+  // Coupon State
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponMessage, setCouponMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setCouponMessage(null);
+    try {
+      const res = await api.post('/coupons/validate', { code: couponCode });
+      setAppliedCoupon(res.data);
+      setCouponMessage({ type: 'success', text: language === 'ar' ? 'تم تطبيق الخصم بنجاح!' : 'Coupon applied successfully!' });
+    } catch (e: any) {
+      setAppliedCoupon(null);
+      setCouponMessage({ type: 'error', text: e.response?.data?.message || 'Invalid coupon' });
+    }
+  };
+
   const handleEnroll = async () => {
     setIsEnrolling(true);
     setEnrollMessage(null);
     try {
       if (!course) return;
 
-      // If course is paid (> $0), initiate Stripe Checkout session
-      if (course.price > 0) {
-        const response = await api.post("/checkout/create-checkout-session", { courseId: id });
+      let finalPrice = course.price;
+      if (appliedCoupon && finalPrice > 0) {
+        if (appliedCoupon.discountPercent) {
+          finalPrice = finalPrice - (finalPrice * (appliedCoupon.discountPercent / 100));
+        } else if (appliedCoupon.discountAmount) {
+          finalPrice = Math.max(0, finalPrice - appliedCoupon.discountAmount);
+        }
+      }
+
+      // If course is paid (> $0) after discount, initiate Stripe Checkout session
+      if (finalPrice > 0) {
+        const response = await api.post("/checkout/create-checkout-session", { 
+          courseId: id,
+          couponCode: appliedCoupon?.code // pass coupon code to backend checkout
+        });
         if (response.data.url) {
           window.location.href = response.data.url;
           return;

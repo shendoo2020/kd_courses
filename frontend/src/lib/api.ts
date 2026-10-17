@@ -28,6 +28,9 @@ export type PrintItemType = 'SUMMARY_BOOKLET' | 'FULL_LECTURE_NOTES' | 'STUDY_GU
 export type PrintOrderStatus = 'ORDER_RECEIVED' | 'PRINTING_IN_PROGRESS' | 'DISPATCHED' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
 export type EventType = 'SEMINAR' | 'WORKSHOP' | 'MENTOR_TALK' | 'CAREER_PANEL';
 export type InstructorAppStatus = 'NEW_APPLICATION' | 'UNDER_REVIEW' | 'INTERVIEW_SCHEDULED' | 'APPROVED' | 'REJECTED';
+export type NotificationType = 'INFO' | 'SUCCESS' | 'WARNING' | 'MESSAGE';
+export type ProjectSubmissionStatus = 'PENDING_REVIEW' | 'PASSED' | 'REVISION_REQUIRED';
+export type OrgRole = 'ORG_ADMIN' | 'ORG_MEMBER';
 
 export interface Course {
   id: string;
@@ -186,6 +189,72 @@ export interface Testimonial {
   createdAt: string;
 }
 
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  read: boolean;
+  link?: string | null;
+  createdAt: string;
+}
+
+export interface Comment {
+  id: string;
+  text: string;
+  userId: string;
+  user: { id: string; name: string; avatarUrl?: string | null; role: string };
+  upvotes: number;
+  isEndorsed: boolean;
+  createdAt: string;
+  replies?: Comment[];
+}
+
+export interface ProjectSubmission {
+  id: string;
+  courseId: string;
+  course?: { title: string };
+  user?: { name: string; email: string; avatarUrl?: string | null };
+  repoUrl?: string | null;
+  documentUrl?: string | null;
+  notes?: string | null;
+  status: ProjectSubmissionStatus;
+  feedback?: string | null;
+  gradedAt?: string | null;
+  createdAt: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discountPercent?: number | null;
+  discountAmount?: number | null;
+  maxUses?: number | null;
+  uses: number;
+  expiresAt?: string | null;
+  isActive: boolean;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  contactEmail: string;
+  seatLimit: number;
+  activeSeats: number;
+  joinCode: string;
+  members?: OrgMembership[];
+}
+
+export interface OrgMembership {
+  id: string;
+  orgId: string;
+  userId: string;
+  role: OrgRole;
+  joinedAt: string;
+  org?: Organization;
+  user?: { id: string; name: string; email: string; enrollments: { status: string }[] };
+}
+
 // Typed Service Helpers
 export const courseRequestsApi = {
   submit: (data: Partial<CourseRequest>) => api.post('/course-requests', data),
@@ -223,4 +292,39 @@ export const instructorApplicationsApi = {
 export const testimonialsApi = {
   getFeatured: (params?: { courseId?: string }) => api.get<Testimonial[]>('/testimonials', { params }),
   submit: (data: Partial<Testimonial>) => api.post('/testimonials', data),
+};
+
+export const notificationsApi = {
+  getMy: () => api.get<NotificationItem[]>('/notifications'),
+  getUnreadCount: () => api.get<{ unreadCount: number }>('/notifications/unread-count'),
+  markRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllRead: () => api.patch('/notifications/mark-all-read'),
+};
+
+export const commentsApi = {
+  getLessonComments: (lessonId: string) => api.get<Comment[]>(`/classroom/lessons/${lessonId}/comments`),
+  postComment: (lessonId: string, data: { text: string; parentId?: string }) => api.post(`/classroom/lessons/${lessonId}/comments`, data),
+  upvote: (commentId: string) => api.patch(`/classroom/lessons/comments/${commentId}/upvote`),
+  endorse: (commentId: string) => api.patch(`/classroom/lessons/comments/${commentId}/endorse`),
+};
+
+export const projectsApi = {
+  submit: (data: Partial<ProjectSubmission>) => api.post('/projects/submit', data),
+  getMy: (courseId?: string) => api.get<ProjectSubmission[]>('/projects/my-submissions', { params: { courseId } }),
+  getAllAdmin: (params?: { status?: string; courseId?: string }) => api.get<ProjectSubmission[]>('/projects/admin', { params }),
+  grade: (id: string, data: { status: ProjectSubmissionStatus; feedback?: string }) => api.patch(`/projects/admin/${id}/grade`, data),
+};
+
+export const couponsApi = {
+  validate: (code: string) => api.post<Coupon>('/coupons/validate', { code }),
+  getAll: () => api.get<Coupon[]>('/coupons'),
+  create: (data: Partial<Coupon>) => api.post('/coupons', data),
+  deactivate: (id: string) => api.patch(`/coupons/${id}/deactivate`),
+};
+
+export const orgsApi = {
+  join: (joinCode: string) => api.post('/orgs/join', { joinCode }),
+  getMy: () => api.get<OrgMembership[]>('/orgs/me'),
+  create: (data: Partial<Organization>) => api.post('/orgs', data),
+  getDashboard: (id: string) => api.get<Organization>(`/orgs/${id}/dashboard`),
 };

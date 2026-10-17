@@ -72,6 +72,24 @@ enum InstructorAppStatus {
   REJECTED
 }
 
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  MESSAGE
+}
+
+enum ProjectSubmissionStatus {
+  PENDING_REVIEW
+  PASSED
+  REVISION_REQUIRED
+}
+
+enum OrgRole {
+  ORG_ADMIN
+  ORG_MEMBER
+}
+
 model User {
   id                  String       @id @default(uuid())
   name                String
@@ -81,9 +99,9 @@ model User {
   avatarUrl           String?
   bio                 String?      @db.Text
   isTemporaryPassword Boolean      @default(false)
-  title               String?      // e.g. Principal AI Researcher, Ex-DeepMind
-  organization        String?      // e.g. Stanford University / Google
-  academicCredentials String?      // e.g. Ph.D. in CS, M.Ed.
+  title               String?
+  organization        String?
+  academicCredentials String?
   linkedinUrl         String?
   githubUrl           String?
   websiteUrl          String?
@@ -102,6 +120,9 @@ model User {
   eventRegistrations  EventRegistration[]
   assignedCourseRequests CourseRequest[] @relation("AssignedInstructor")
   testimonials        Testimonial[]
+  notifications       Notification[]
+  projectSubmissions  ProjectSubmission[]
+  orgMemberships      OrgMembership[]
 }
 
 model Course {
@@ -117,7 +138,7 @@ model Course {
   endDate          DateTime?
   durationWeeks    Int?           @default(8)
   hoursPerWeek     Int?           @default(5)
-  scheduleDetails  String?        // e.g., "Tuesdays & Thursdays, 6:00 PM - 8:00 PM EST"
+  scheduleDetails  String?
   inclusions       String[]       @default([])
   exclusions       String[]       @default([])
   prerequisites    String[]       @default([])
@@ -138,6 +159,7 @@ model Course {
   wishlists        Wishlist[]
   printOrders      PrintOrder[]
   testimonials     Testimonial[]
+  projectSubmissions ProjectSubmission[]
 }
 
 model Review {
@@ -203,13 +225,21 @@ model Lesson {
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  text      String   @db.Text
-  lessonId  String
-  lesson    Lesson   @relation(fields: [lessonId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  id          String    @id @default(uuid())
+  text        String    @db.Text
+  lessonId    String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  
+  // Q&A Forum Extension (Phase 1)
+  parentId    String?
+  parent      Comment?  @relation("ThreadedReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("ThreadedReplies")
+  upvotes     Int       @default(0)
+  isEndorsed  Boolean   @default(false)
+  
+  createdAt   DateTime  @default(now())
 }
 
 model LessonProgress {
@@ -272,7 +302,6 @@ model Certificate {
   @@unique([userId, courseId])
 }
 
-// Pillar 1: Custom Course Request System (B2B & Cohort On-Demand)
 model CourseRequest {
   id                    String              @id @default(uuid())
   requesterName         String
@@ -282,7 +311,7 @@ model CourseRequest {
   targetAudience        TargetAudience      @default(PROFESSIONAL)
   topic                 String
   studentCount          Int                 @default(10)
-  neededTimeframe       String              // e.g., "Next 4 weeks", "Q1 Semester"
+  neededTimeframe       String              
   deliveryMode          DeliveryMode        @default(HYBRID)
   specificRequirements  String?             @db.Text
   status                CourseRequestStatus @default(PENDING_REVIEW)
@@ -295,7 +324,6 @@ model CourseRequest {
   updatedAt             DateTime            @updatedAt
 }
 
-// Pillar 2: Print-on-Demand & Home Delivery Fulfillment
 model PrintOrder {
   id             String           @id @default(uuid())
   userId         String
@@ -316,12 +344,11 @@ model PrintOrder {
   paymentStatus  String           @default("PAID")
   status         PrintOrderStatus @default(ORDER_RECEIVED)
   trackingNumber String?
-  carrier        String?          // e.g., FedEx, DHL, USPS
+  carrier        String?          
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 }
 
-// Pillar 3: Seminars & Community Engagement
 model Event {
   id             String              @id @default(uuid())
   title          String
@@ -335,7 +362,7 @@ model Event {
   startTime      DateTime
   endTime        DateTime
   isVirtual      Boolean             @default(true)
-  locationOrUrl  String?             // Zoom link or campus auditorium
+  locationOrUrl  String?             
   maxCapacity    Int                 @default(100)
   bannerUrl      String?
   createdAt      DateTime            @default(now())
@@ -359,14 +386,13 @@ model EventRegistration {
   @@unique([eventId, attendeeEmail])
 }
 
-// Pillar 4: Instructor Onboarding & Recruitment Application
 model InstructorApplication {
   id                    String              @id @default(uuid())
   fullName              String
   email                 String
   phone                 String
-  currentAffiliation    String              // University, Institute or Company
-  highestDegree         String              // e.g., M.S., Ph.D., Lead Architect
+  currentAffiliation    String              
+  highestDegree         String              
   linkedinUrl           String?
   portfolioUrl          String?
   resumeUrl             String?
@@ -380,12 +406,11 @@ model InstructorApplication {
   updatedAt             DateTime            @updatedAt
 }
 
-// Pillar 6: Institutional Trust & Social Proof
 model Testimonial {
   id              String   @id @default(uuid())
   studentName     String
-  studentRole     String   // e.g. "Senior ML Engineer"
-  companyOrSchool String   // e.g. "Meta / Stanford Alum"
+  studentRole     String   
+  companyOrSchool String   
   avatarUrl       String?
   quote           String   @db.Text
   rating          Int      @default(5)
@@ -397,4 +422,76 @@ model Testimonial {
   course          Course?  @relation(fields: [courseId], references: [id])
   certificateId   String?
   createdAt       DateTime @default(now())
+}
+
+// ==========================================
+// Phase 1-4 Expansion Models
+// ==========================================
+
+// Phase 1: In-App Notifications
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String           @db.Text
+  type      NotificationType @default(INFO)
+  read      Boolean          @default(false)
+  link      String?          
+  createdAt DateTime         @default(now())
+}
+
+// Phase 2: Capstone Project Submissions
+model ProjectSubmission {
+  id           String                  @id @default(uuid())
+  courseId     String
+  course       Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repoUrl      String?                 // GitHub, GitLab, etc.
+  documentUrl  String?                 // PDF deliverable
+  notes        String?                 @db.Text
+  status       ProjectSubmissionStatus @default(PENDING_REVIEW)
+  feedback     String?                 @db.Text
+  gradedAt     DateTime?
+  createdAt    DateTime                @default(now())
+}
+
+// Phase 3: Promotional Coupons
+model Coupon {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  discountPercent Int?     // e.g., 50 for 50%
+  discountAmount Float?    // e.g., 20.00 for $20 off
+  maxUses        Int?      // Null = unlimited
+  uses           Int       @default(0)
+  expiresAt      DateTime? 
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+}
+
+// Phase 4: Enterprise B2B Organizations
+model Organization {
+  id           String          @id @default(uuid())
+  name         String
+  contactEmail String
+  seatLimit    Int             @default(0)
+  activeSeats  Int             @default(0)
+  joinCode     String?         @unique // Custom code for auto-joining
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  members      OrgMembership[]
+}
+
+model OrgMembership {
+  id        String       @id @default(uuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      OrgRole      @default(ORG_MEMBER)
+  joinedAt  DateTime     @default(now())
+
+  @@unique([orgId, userId])
 }

@@ -4,6 +4,7 @@ import authRoutes from './routes/authRoutes';
 import courseRoutes from './routes/courseRoutes';
 import enrollRoutes from './routes/enrollRoutes';
 import classroomRoutes from './routes/classroomRoutes';
+import commentRoutes from './routes/commentRoutes';
 import quizRoutes from './routes/quizRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import certRoutes from './routes/certRoutes';
@@ -14,6 +15,10 @@ import deliveryRoutes from './routes/deliveryRoutes';
 import eventRoutes from './routes/eventRoutes';
 import instructorAppRoutes from './routes/instructorAppRoutes';
 import testimonialRoutes from './routes/testimonialRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import projectRoutes from './routes/projectRoutes';
+import couponRoutes from './routes/couponRoutes';
+import orgRoutes from './routes/orgRoutes';
 import { errorHandler } from './middlewares/errorMiddleware';
 
 const app: Application = express();
@@ -34,12 +39,17 @@ app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollRoutes);
 app.use('/api/classroom', classroomRoutes);
+app.use('/api/classroom/lessons', commentRoutes); // Mount comment routes under lessons
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/certificates', certRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/instructor/analytics', instructorRoutes);
 
-// Educational Expansion & Services Routes
+// Phase 1-4 Expansion & Services Routes
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/orgs', orgRoutes);
 app.use('/api/course-requests', courseRequestRoutes);
 app.use('/api/delivery', deliveryRoutes);
 app.use('/api/events', eventRoutes);

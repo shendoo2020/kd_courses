@@ -6,10 +6,12 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import { 
   ArrowLeft, CheckCircle2, Circle, PlayCircle, FileText, Loader2, Menu, 
-  HelpCircle, ChevronLeft, ChevronRight, X, Award, Check
+  HelpCircle, ChevronLeft, ChevronRight, X, Award, Check, MessageSquare
 } from "lucide-react";
 import dynamic from 'next/dynamic';
 import InteractiveLessonPlayer from "./InteractiveLessonPlayer";
+import DiscussionDrawer from "@/components/DiscussionDrawer";
+import CapstoneSubmission from "@/components/CapstoneSubmission";
 
 // Dynamically import react-player to avoid hydration errors with Next.js SSR
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false }) as any;
@@ -23,6 +25,7 @@ export default function StudentClassroomPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile: closed by default for full screen
+  const [isDiscussionOpen, setIsDiscussionOpen] = useState(false); // Q&A Drawer
 
   // Quiz Interaction State
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -317,8 +320,9 @@ export default function StudentClassroomPage() {
         </div>
 
         {activeLesson ? (
-          <div className="max-w-4xl mx-auto w-full p-4 sm:p-8 lg:p-10 flex-1 flex flex-col justify-between">
-            <div>
+          <div className="w-full flex-1 flex flex-col xl:flex-row overflow-hidden">
+            {/* Main Lesson Content */}
+            <div className={`flex-1 overflow-y-auto p-4 sm:p-8 lg:p-10 ${isDiscussionOpen ? 'xl:block hidden' : 'block'}`}>
               {/* Lesson Metadata Header */}
               <div className="mb-6">
                 <div className="flex items-center justify-between gap-2 mb-3">
@@ -326,11 +330,19 @@ export default function StudentClassroomPage() {
                     {isQuiz ? "Checkpoint Assessment" : activeLesson.content?.includes('http') ? "Video Lecture" : "Technical Reading Lab"}
                   </span>
                   
-                  {activeIsDone && (
-                    <span className="flex items-center gap-1.5 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/60 px-3 py-1 rounded-full border border-green-200 dark:border-green-800 text-xs font-bold">
-                      <Check size={14} /> Completed
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsDiscussionOpen(!isDiscussionOpen)}
+                      className="flex items-center gap-1.5 text-slate-500 hover:text-brand-600 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-bold transition-colors xl:hidden"
+                    >
+                      <MessageSquare size={14} /> Q&A
+                    </button>
+                    {activeIsDone && (
+                      <span className="flex items-center gap-1.5 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/60 px-3 py-1 rounded-full border border-green-200 dark:border-green-800 text-xs font-bold">
+                        <Check size={14} /> Completed
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-6">
                   {activeLesson.title}
@@ -486,71 +498,13 @@ export default function StudentClassroomPage() {
                   </Link>
                 ) : null}
               </div>
-
-              {/* LESSON Q&A DISCUSSION FORUM */}
-              <div className="pt-4">
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight mb-4 flex items-center gap-2">
-                  <span>Lesson Q&A & Discussion</span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full font-bold">
-                    {activeLesson.comments?.length || 0}
-                  </span>
-                </h3>
-
-                {/* Add comment form */}
-                <form 
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const input = (e.currentTarget.elements.namedItem('commentText') as HTMLInputElement);
-                    if (!input.value.trim()) return;
-                    try {
-                      await api.post(`/classroom/lessons/${activeLesson.id}/comments`, { text: input.value });
-                      input.value = '';
-                      fetchClassroom();
-                    } catch (err) {
-                      alert("Failed to post comment.");
-                    }
-                  }}
-                  className="flex gap-2 sm:gap-3 mb-6"
-                >
-                  <input 
-                    type="text" 
-                    name="commentText" 
-                    placeholder="Ask a question or share thoughts on this lesson..."
-                    className="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-brand-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-                    required
-                  />
-                  <button type="submit" className="btn-primary text-xs font-bold px-4 sm:px-5 py-2.5 shrink-0">
-                    Post
-                  </button>
-                </form>
-
-                {/* Comments list */}
-                {activeLesson.comments && activeLesson.comments.length > 0 ? (
-                  <div className="space-y-3">
-                    {activeLesson.comments.map((comment: any) => (
-                      <div key={comment.id} className="p-4 bg-slate-50/80 dark:bg-slate-900/80 rounded-xl border border-slate-100 dark:border-slate-800 text-xs sm:text-sm">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            {comment.user.name}
-                            {comment.user.role === 'INSTRUCTOR' && (
-                              <span className="bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 text-[10px] px-2 py-0.5 rounded font-black uppercase">
-                                Instructor
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-[11px] text-slate-400">
-                            {new Date(comment.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-normal">{comment.text}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-400 italic">No questions posted yet for this lesson. Be the first to ask!</p>
-                )}
-              </div>
             </div>
+
+            {/* Q&A / Discussion Drawer (Right Side) */}
+            <div className={`w-full xl:w-80 2xl:w-96 shrink-0 transition-all ${isDiscussionOpen ? 'block' : 'hidden xl:block'}`}>
+              <DiscussionDrawer lessonId={activeLesson.id} />
+            </div>
+
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center text-slate-400 p-8 text-center font-semibold">
