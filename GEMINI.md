@@ -1,35 +1,66 @@
 # KLZ Academy Workspace Context
 
 ## Project Overview
-This repository contains **KLZ Academy**, a production-grade Course Management and Interactive Learning Platform built with a decoupled architecture inspired by Coursera and DeepLearning.AI.
+This repository contains **KLZ Academy** (KDCourses), a production-grade Course Management, Interactive Learning, and Enterprise B2B Platform inspired by Coursera and DeepLearning.AI.
 
-- **Frontend (`frontend/`):** Next.js 14 App Router, React 18, TypeScript, Tailwind CSS, Lucide Icons, React Hook Form, `react-player`.
+- **Frontend (`frontend/`):** Next.js 14 App Router, React 18, TypeScript, Tailwind CSS, Lucide Icons, Monaco Editor (`@monaco-editor/react`), React Hook Form, `react-player`, `react-markdown`, `remark-gfm`, Web Speech API voice storytelling, and native Arabic (العربية) RTL internationalization.
 - **Backend (`backend/`):** Node.js 20 LTS, Express.js REST API, TypeScript, JWT stateless authentication, bcryptjs, Stripe SDK, `pdf-lib`, `nodemailer`.
-- **Database:** PostgreSQL 16 with Prisma ORM (`backend/prisma/schema.prisma`).
+- **Database:** PostgreSQL 16 with Prisma ORM 5.22 (`backend/prisma/schema.prisma`).
 - **DevOps & Production:** Ubuntu 24.04 LTS Server with Nginx (reverse proxy), PM2 (process manager), and GitHub Actions automated CI/CD pipeline (`.github/workflows/deploy.yml`).
 
 ## Key Directory Structure
-*   `frontend/src/app/`: Next.js 14 App Router pages:
-    *   `/`: Catalog landing page with search, categories, and price filters.
+
+### Frontend (`frontend/src/`)
+*   `app/`: Next.js 14 App Router pages:
+    *   `/`: Multi-level catalog with audience tiers (`K-12`, `Higher Ed`, `Professional`), delivery modes (`Self-Paced`, `Cohort`, `Hybrid`), search, and full Arabic RTL support.
     *   `/(auth)/login/` & `/(auth)/register/`: Role-based authentication with confirm password validation.
-    *   `/(auth)/forgot-password/`: Password recovery flow sending temporary passwords via email.
-    *   `/courses/[id]/`: Public course details with syllabus, reviews, and dynamic CTA ("Start Now" vs "Continue Learning").
-    *   `/courses/[id]/learn/`: Interactive Classroom with 100vh mobile layout, next/prev lesson buttons, video player, reading labs, persistent checkpoint quizzes, and progress tracking.
+    *   `/(auth)/forgot-password/`: Password recovery flow sending temporary passwords via SMTP.
+    *   `/courses/[id]/`: Public course details with transparent package inclusions/exclusions, schedule metrics, instructor credentials, promotional coupon input, and physical study pack home delivery modal.
+    *   `/courses/[id]/learn/`: Interactive Classroom with 100vh mobile layout, stepper navigation, Web Speech AI narration, Monaco code execution sandbox, checkpoint quizzes, threaded Q&A drawer (`DiscussionDrawer`), and capstone project submission (`CapstoneSubmission`).
+    *   `/custom-courses/`: Multi-step institutional and enterprise B2B custom course request wizard.
+    *   `/events/`: Academic seminars and keynotes calendar with live seat reservations (RSVP).
+    *   `/teach/`: Faculty and instructor onboarding and recruitment portal.
+    *   `/about/`: Institutional mission, academic governance, and faculty review board.
+    *   `/stories/`: Alumni wall of love, student testimonials, and verified certificate gallery.
+    *   `/org/dashboard/`: B2B Enterprise team manager portal for license seat tracking, employee roster, and secure join codes.
     *   `/dashboard/`: Student enrolled courses and progress overview with clean state rendering.
-    *   `/dashboard/profile/`: Public profile editor, avatar gallery, theme toggles, change password form, and gated certificate generator/download.
-    *   `/admin/dashboard/`: Instructor portal and course listing.
-    *   `/admin/courses/new/`: Course creation wizard.
-    *   `/admin/courses/[id]/edit/`: Curriculum & syllabus builder with quiz authoring.
-*   `backend/src/`: Express REST API:
-    *   `controllers/`: Business logic for Auth (including forgot/change password), Courses, Reviews, Classroom, Quizzes, Stripe, Certificates (joyful & professional PDF generation), and Users.
-    *   `routes/`: Modular Express route definitions with JWT protection and role enforcement.
-    *   `middlewares/`: `authMiddleware.ts` (JWT verification and role guards) and `errorMiddleware.ts`.
-    *   `utils/`: `email.ts` (Nodemailer transporter for transactional emails / password recovery), `auth.ts`, `courseSeeder.ts`.
-    *   `prisma/schema.prisma`: Schema definitions for Users, Courses, Enrollments, Modules, Lessons, LessonProgress, Quizzes, Questions, Options, QuizAttempts, Certificates, and Reviews.
+    *   `/dashboard/profile/`: Profile editor, local image upload, theme toggle, change password, and verified certificate generation/download.
+    *   `/admin/dashboard/`: Multi-tab operations control center for Courses, Custom Requests, Logistics Delivery, Faculty Applications, and Seminar Scheduling.
+*   `components/`:
+    *   `NotificationBell.tsx`: Real-time notification bell dropdown in header with unread count and deep links.
+    *   `DiscussionDrawer.tsx`: In-classroom slide Q&A forum with threaded replies, upvotes, and instructor endorsement badges.
+    *   `CodeSandbox.tsx`: Embedded Monaco Editor with code execution simulation and unit-test assertions.
+    *   `CapstoneSubmission.tsx`: Capstone repository submission form and instructor grading history.
+*   `lib/`:
+    *   `api.ts`: Central Axios client with typed service helpers for Courses, Requests, Delivery, Events, Applications, Testimonials, Notifications, Comments, Projects, Coupons, and Orgs.
+    *   `LanguageContext.tsx`: Global language state (`en` ⇋ `ar`), RTL direction switcher (`ltr` ⇋ `rtl`), and localStorage persistence.
+    *   `translations.ts`: High-register bilingual dictionaries for English and Arabic.
+
+### Backend (`backend/src/`)
+*   `controllers/`:
+    *   `authController.ts`: Registration, JWT login, profile updates, and temporary password reset.
+    *   `courseController.ts`: Course catalog with multi-tier filters, syllabus details, and reviews.
+    *   `classroomController.ts`: Module/lesson progress tracking and classroom syllabus retrieval.
+    *   `commentController.ts`: Threaded Q&A questions, replies, upvotes, and instructor endorsements.
+    *   `notificationController.ts`: In-app notification dispatch and read-state management.
+    *   `projectController.ts`: Capstone project submissions and instructor grading.
+    *   `couponController.ts`: Promotional coupon creation and checkout validation.
+    *   `orgController.ts`: Enterprise B2B team organization, join codes, and manager analytics.
+    *   `courseRequestController.ts`: Custom cohort requests and administrative status updates.
+    *   `deliveryController.ts`: Door-to-door print order logistics and courier tracking codes.
+    *   `eventController.ts`: Seminars, keynotes, and attendee RSVP management.
+    *   `instructorAppController.ts`: Faculty recruitment pipeline and one-click account promotion.
+    *   `testimonialController.ts`: Alumni reviews and social proof showcase.
+    *   `paymentController.ts`: Stripe Checkout sessions and raw webhook verification.
+    *   `certController.ts`: Dynamic PDF certificate generation via `pdf-lib`.
+*   `routes/`: Express route definitions mounted in `app.ts`.
+*   `middlewares/`: `authMiddleware.ts` (JWT verification and role guards) and `errorMiddleware.ts`.
+*   `utils/`: `email.ts` (Nodemailer transporter for transactional emails / password recovery), `auth.ts`, `courseSeeder.ts`, `promptCourseSeeder.ts`.
+*   `prisma/schema.prisma`: Comprehensive schema definitions for Users, Courses, Enrollments, Modules, Lessons, LessonProgress, Quizzes, QuizAttempts, Certificates, Reviews, Comments, CourseRequests, PrintOrders, Events, EventRegistrations, InstructorApplications, Testimonials, Notifications, ProjectSubmissions, Coupons, Organizations, and OrgMemberships.
 
 ## Development & Contribution Standards
 *   **Production Quality:** NEVER use lazy placeholders like `// ... rest of code` or partial implementations.
-*   **Design & Theme:** Adhere strictly to the KLZ Academy palette (`brand-600` primary blue, `slate-950` dark surfaces, `slate-50` subtle backgrounds) with complete Dark Mode support.
+*   **Design & Theme:** Adhere strictly to the KLZ Academy palette (`brand-600` primary blue, `slate-950` dark surfaces, `slate-50` subtle backgrounds) with complete Dark Mode and Arabic RTL support.
 *   **Type Safety:** Adhere to strict TypeScript typing across all controllers, models, and UI components.
 *   **CI/CD Pipeline:** Every push to `main` triggers `.github/workflows/deploy.yml`, which tests, migrates, builds, and deploys directly to the production server. Ensure local builds (`npm run build` in both `frontend` and `backend`) pass with zero errors before committing.
 
@@ -42,7 +73,7 @@ This repository contains **KLZ Academy**, a production-grade Course Management a
 
 2. **Quoting File Paths with Parentheses/Brackets:**
    - On Windows PowerShell, paths containing parentheses or brackets (e.g. `frontend/src/app/(auth)/login/page.tsx` or `[id]`) trigger subexpression parsing errors if unquoted.
-   - **Always quote paths with single quotes:** `'frontend/src/app/(auth)/login/page.tsx'`.
+   - **Always quote paths with single quotes:** `'frontend/src/app/courses/[id]/page.tsx'`.
 
 3. **Git Push in Non-Interactive / Headless Environments:**
    - When tools or CLI wrappers pass `credential.helper=`, running `git push` fails with `fatal: could not read Username for 'https://github.com': terminal prompts disabled`.
@@ -56,7 +87,7 @@ This repository contains **KLZ Academy**, a production-grade Course Management a
    - `npx prisma db push` will execute on the remote production server during the CI/CD pipeline deployment.
 
 5. **Nodemailer & Transactional Email Strategy:**
-   - Rather than installing a complex self-hosted Postfix SMTP server on Ubuntu (which requires strict SPF, DKIM, DMARC DNS records to avoid spam filters), use standard SMTP environment variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`) compatible with free tiers of Resend (3,000 free emails/mo) or SendGrid (100 free emails/day).
+   - Rather than installing a complex self-hosted Postfix SMTP server on Ubuntu, use standard SMTP environment variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`) compatible with free tiers of Resend (3,000 free emails/mo) or SendGrid (100 free emails/day).
    - In development environments without SMTP credentials, `email.ts` securely logs the temporary password to the console for frictionless testing.
 
 6. **Next.js JSX Conditional Rendering:**

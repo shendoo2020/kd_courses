@@ -65,21 +65,29 @@ KLZ Academy is engineered as a decoupled monorepo architecture:
 
 ## ✨ Key Features
 
-### For Students
-- **Course Discovery & Filtering:** Real-time search with instant category filters (*Development, Data Science, Business, Design, Cybersecurity*) and price toggles (*Free vs. Paid*).
-- **Course Details & Dynamic CTAs:** Detailed syllabus preview, instructor biographies, ratings, reviews, and adaptive buttons ("Start Now" vs "Continue Learning" vs "Review Course").
-- **Stripe Checkout Integration:** One-click redirection to Stripe Checkout for secure purchases. Free courses enroll instantly.
-- **Interactive Classroom:** Fullscreen mobile-optimized layout (100vh without distracting global headers), previous & next lesson navigation, video lectures, and technical reading labs.
-- **Knowledge Checkpoints (Quizzes):** Persistent assessments with instant scoring; answers and passed checkpoints remain securely recorded without timeouts or state resets.
-- **Course Completion Tracking:** Progress tracks automatically to 100%, updating enrollment status upon completing all course materials.
-- **Joyful & Verifiable PDF Certificates:** Strict download gating (unlocked only upon 100% completion) generating professional, print-ready PDF certificates with royal gold and navy concentric borders, honor rosettes, and public verification links.
-- **Student Profile, Avatar & Settings:** Gallery and URL profile picture selector, dark/light theme switchers, and in-app password changes.
-- **Account Recovery:** Forgot password workflow sending secure temporary passwords via Nodemailer with forced permanent password reset upon login.
+### For Students & Learners
+- **Multi-Level Educational Pathways:** Multi-tier academic catalog navigating across *Schools (K-12)*, *Universities & Colleges*, and *Professional & Enterprise Training*, with delivery mode filters (*Self-Paced, Live Cohort, Hybrid*).
+- **Native Arabic (العربية) & RTL Support:** Seamless right-to-left UI layout with custom Cairo Google Font typography and instant bilingual toggle.
+- **In-Browser Coding Sandboxes:** Monaco Editor (`@monaco-editor/react`) integration embedded into lessons with test assertions and syntax support.
+- **Classroom Q&A Forum Drawer:** Threaded slide discussions, answer upvoting, and instructor endorsement badges.
+- **In-App Notification Center:** Global notification bell with unread badge alerts for replies, grades, and event invites.
+- **Capstone Project Submissions:** GitHub repository / PDF deliverable submission with instructor feedback and status tracking.
+- **Physical Material Home Delivery:** Door-to-door print ordering for spiral summary booklets, lecture notes, and gold-foil certificates with courier tracking.
+- **Seminars & Keynotes Calendar:** Community events and live webinars with complimentary seat reservations (RSVP).
+- **Promotional Coupons & Regional Checkout:** Coupon discount validation during checkout with flexible deductions.
+- **Interactive Classroom:** Fullscreen mobile-optimized layout (100vh), step-by-step navigation, AI voice storytelling, video lectures, and technical labs.
+- **Knowledge Checkpoints (Quizzes):** Persistent assessments with instant scoring and pass-rate recording.
+- **Joyful & Verifiable PDF Certificates:** Strict download gating with tamper-proof cryptographic UUID verification at `/verify/[certId]`.
+- **Student Profile, Avatar & Settings:** Avatar gallery, local image upload with canvas resizing, dark/light theme switchers, and password reset.
+
+### For Institutions & Enterprises
+- **B2B Custom Course Requests:** On-demand cohort inquiry system (`/custom-courses`) with admin proposal review.
+- **Enterprise Team Manager Portal (`/org/dashboard`):** Multi-seat license usage graphs, employee roster, progress tracking, and secure join codes.
 
 ### For Instructors & Admins
-- **Instructor Portal (`/admin/dashboard`):** Overview of published courses, revenue metrics, and student enrollments.
-- **Course Creator (`/admin/courses/new`):** Wizard for course metadata, pricing, category classification, and initial syllabus.
-- **Curriculum & Syllabus Builder (`/admin/courses/[id]/edit`):** Drag-and-drop-style builder to create Modules, add Video/Article Lessons, and attach Multiple-Choice Quizzes.
+- **Operations Control Center (`/admin/dashboard`):** Multi-tab triage for Curriculum, Custom Inquiries, Logistics Delivery Orders, Faculty Candidates, and Seminars.
+- **Faculty Recruitment Funnel (`/teach`):** Vetted application pipeline with one-click instructor account approval.
+- **Curriculum & Syllabus Builder (`/admin/courses/[id]/edit`):** Module organizer, video/article editor, and quiz builder.
 
 ---
 
